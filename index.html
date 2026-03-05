@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kapitalwerk — Märkte. Ideen. Perspektiven.</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --brg: #2C5F2E;
+  --brg-light: #3a7a3d;
+  --brg-pale: #eef4ee;
+  --brg-muted: rgba(44,95,46,0.09);
+  --cream: #FAFAF7;
+  --ink: #181815;
+  --ink-soft: #4a4a44;
+  --ink-muted: #8a8a80;
+  --rule: rgba(44,95,46,0.13);
+  --serif: 'Playfair Display', Georgia, serif;
+  --sans: 'DM Sans', system-ui, sans-serif;
+  --mono: 'DM Mono', monospace;
+  --shadow: 0 4px 24px rgba(0,0,0,0.07);
+  --shadow-lg: 0 12px 48px rgba(0,0,0,0.12);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:16px;scroll-behavior:smooth;}
+body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weight:300;line-height:1.7;-webkit-font-smoothing:antialiased;}
+
+/* NOISE */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.4;}
+
+/* HEADER */
+header{position:sticky;top:0;z-index:100;background:rgba(250,250,247,0.93);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--rule);}
+.header-inner{max-width:1240px;margin:0 auto;padding:0 2rem;height:70px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;flex-direction:column;gap:1px;text-decoration:none;}
+.logo-name{font-family:var(--serif);font-size:1.45rem;font-weight:600;color:var(--ink);letter-spacing:-.02em;line-height:1;}
+.logo-name span{color:var(--brg);}
+.logo-tagline{font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-muted);font-weight:400;}
+nav{display:flex;align-items:center;gap:2.5rem;}
+nav a{font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);text-decoration:none;font-weight:400;transition:color .2s;position:relative;}
+nav a::after{content:'';position:absolute;bottom:-3px;left:0;width:0;height:1px;background:var(--brg);transition:width .25s ease;}
+nav a:hover{color:var(--brg);}
+nav a:hover::after{width:100%;}
+.nav-cta{background:var(--brg)!important;color:#fff!important;padding:.45rem 1.1rem;border-radius:2px;font-size:.72rem!important;transition:background .2s!important;}
+.nav-cta::after{display:none!important;}
+.nav-cta:hover{background:var(--brg-light)!important;}
+.admin-btn{background:transparent;border:1px solid var(--rule);color:var(--ink-muted)!important;padding:.45rem 1rem;border-radius:2px;cursor:pointer;font-size:.72rem!important;letter-spacing:.08em!important;}
+.admin-btn:hover{border-color:var(--brg);color:var(--brg)!important;}
+
+/* PAGES */
+.page{display:none;}
+.page.active{display:block;}
+
+/* HERO */
+.hero{max-width:1240px;margin:0 auto;padding:5rem 2rem 4rem;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:end;border-bottom:1px solid var(--rule);}
+.hero-left h1{font-family:var(--serif);font-size:clamp(2.6rem,4.5vw,4.2rem);font-weight:500;line-height:1.08;letter-spacing:-.03em;margin-bottom:1.25rem;}
+.hero-left h1 em{color:var(--brg);font-style:italic;}
+.hero-left p{font-size:1rem;color:var(--ink-soft);max-width:440px;line-height:1.8;}
+.hero-right{display:flex;flex-direction:column;gap:.75rem;}
+.ticker-label{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-muted);padding-bottom:.5rem;border-bottom:1px solid var(--rule);}
+.ticker-row{display:flex;justify-content:space-between;align-items:center;padding:.55rem 0;border-bottom:1px solid var(--rule);}
+.ticker-name{font-family:var(--mono);font-size:.78rem;color:var(--ink);font-weight:500;}
+.ticker-value{font-family:var(--mono);font-size:.82rem;font-weight:500;}
+.ticker-change{font-family:var(--mono);font-size:.72rem;padding:.12rem .45rem;border-radius:2px;}
+.up{color:var(--brg);}
+.down{color:#c0392b;}
+.up-bg{background:var(--brg-muted);color:var(--brg);}
+.down-bg{background:rgba(192,57,43,0.08);color:#c0392b;}
+
+/* MAIN GRID */
+.main-grid{max-width:1240px;margin:0 auto;padding:4rem 2rem;display:grid;grid-template-columns:1fr 320px;gap:5rem;}
+.section-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:2.5rem;padding-bottom:1rem;border-bottom:2px solid var(--brg);}
+.section-title{font-family:var(--serif);font-size:1.05rem;font-weight:500;letter-spacing:.02em;}
+.section-link{font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;color:var(--brg);text-decoration:none;font-weight:500;}
+
+/* POST CARDS */
+.post-featured{margin-bottom:3rem;padding-bottom:3rem;border-bottom:1px solid var(--rule);animation:fadeUp .6s ease forwards;}
+.post-meta{display:flex;align-items:center;gap:.9rem;margin-bottom:.9rem;flex-wrap:wrap;}
+.tag{font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;font-weight:500;padding:.22rem .65rem;background:var(--brg);color:#fff;border-radius:2px;cursor:pointer;}
+.tag-outline{background:transparent;color:var(--brg);border:1px solid var(--brg);}
+.post-date{font-size:.73rem;color:var(--ink-muted);letter-spacing:.04em;}
+.featured-badge{font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-muted);margin-left:auto;}
+.post-featured h2{font-family:var(--serif);font-size:clamp(1.5rem,2.8vw,2.1rem);font-weight:500;line-height:1.18;letter-spacing:-.02em;margin-bottom:.9rem;}
+.post-featured h2 a,.post-item h3 a{text-decoration:none;color:inherit;transition:color .2s;cursor:pointer;}
+.post-featured h2 a:hover,.post-item h3 a:hover{color:var(--brg);}
+.post-excerpt{font-size:.97rem;color:var(--ink-soft);line-height:1.8;margin-bottom:1.25rem;max-width:580px;}
+.pullquote{border-left:2px solid var(--brg);padding:.5rem 1rem;margin:1.2rem 0;font-family:var(--serif);font-style:italic;font-size:.97rem;color:var(--brg);background:var(--brg-muted);}
+.read-more{display:inline-flex;align-items:center;gap:.45rem;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--brg);text-decoration:none;font-weight:500;transition:gap .2s;background:none;border:none;cursor:pointer;font-family:var(--sans);}
+.read-more:hover{gap:.75rem;}
+.post-list{display:flex;flex-direction:column;}
+.post-item{padding:1.8rem 0;border-bottom:1px solid var(--rule);animation:fadeUp .6s ease forwards;}
+.post-item h3{font-family:var(--serif);font-size:1.25rem;font-weight:500;line-height:1.22;letter-spacing:-.01em;margin-bottom:.5rem;}
+.post-item p{font-size:.88rem;color:var(--ink-soft);line-height:1.75;}
+
+/* ARTICLE VIEW */
+#article-view{max-width:1240px;margin:0 auto;padding:4rem 2rem;}
+.article-back{display:inline-flex;align-items:center;gap:.5rem;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--brg);background:none;border:none;cursor:pointer;font-family:var(--sans);font-weight:500;margin-bottom:2.5rem;transition:gap .2s;}
+.article-back:hover{gap:.75rem;}
+.article-header{max-width:780px;margin-bottom:3rem;}
+.article-header h1{font-family:var(--serif);font-size:clamp(2rem,4vw,3rem);font-weight:500;line-height:1.1;letter-spacing:-.03em;margin-bottom:1rem;}
+.article-body{max-width:780px;font-size:1.05rem;line-height:1.85;color:var(--ink-soft);}
+.article-body p{margin-bottom:1.5rem;}
+.article-body h2{font-family:var(--serif);font-size:1.6rem;font-weight:500;color:var(--ink);margin:2.5rem 0 1rem;letter-spacing:-.02em;}
+.article-body blockquote{border-left:2px solid var(--brg);padding:.5rem 1.2rem;margin:1.5rem 0;font-family:var(--serif);font-style:italic;font-size:1.05rem;color:var(--brg);background:var(--brg-muted);}
+
+/* SIDEBAR */
+.sidebar-section{margin-bottom:3rem;animation:fadeUp .6s ease forwards;}
+.sidebar-title{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:1.2rem;padding-bottom:.7rem;border-bottom:1px solid var(--rule);}
+.watchlist-item{display:flex;justify-content:space-between;align-items:center;padding:.7rem 0;border-bottom:1px solid var(--rule);}
+.watchlist-ticker{font-family:var(--mono);font-size:.83rem;font-weight:500;}
+.watchlist-company{font-size:.68rem;color:var(--ink-muted);}
+.watchlist-price{font-family:var(--mono);font-size:.83rem;font-weight:500;text-align:right;}
+.watchlist-pct{font-family:var(--mono);font-size:.7rem;text-align:right;}
+.earnings-item{display:flex;align-items:center;gap:.9rem;padding:.7rem 0;border-bottom:1px solid var(--rule);}
+.earnings-date{min-width:40px;text-align:center;background:var(--brg-muted);border:1px solid var(--rule);padding:.28rem .35rem;border-radius:3px;}
+.earnings-day{display:block;font-family:var(--mono);font-size:.88rem;font-weight:500;color:var(--brg);line-height:1;}
+.earnings-month{display:block;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);}
+.earnings-company{font-size:.83rem;font-weight:500;}
+.earnings-time{font-size:.68rem;color:var(--ink-muted);}
+.earnings-est{font-family:var(--mono);font-size:.73rem;color:var(--ink-soft);text-align:right;margin-left:auto;}
+.est-label{font-size:.58rem;color:var(--ink-muted);display:block;}
+
+/* NEWSLETTER BOX */
+.newsletter-box{background:var(--brg);padding:1.75rem;border-radius:4px;}
+.newsletter-box h4{font-family:var(--serif);font-size:1.15rem;font-weight:500;color:#fff;margin-bottom:.4rem;}
+.newsletter-box p{font-size:.83rem;color:rgba(255,255,255,.72);margin-bottom:1.1rem;line-height:1.6;}
+.newsletter-cta{display:block;width:100%;background:#fff;color:var(--brg);border:none;padding:.75rem;font-family:var(--sans);font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;font-weight:500;cursor:pointer;border-radius:2px;transition:opacity .2s;text-align:center;text-decoration:none;}
+.newsletter-cta:hover{opacity:.9;}
+
+/* ADMIN PANEL */
+#admin-panel{position:fixed;inset:0;background:rgba(24,24,21,.7);backdrop-filter:blur(6px);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem;}
+#admin-panel.open{display:flex;}
+.admin-modal{background:var(--cream);border:1px solid var(--rule);border-radius:6px;width:100%;max-width:820px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);}
+.admin-header{display:flex;align-items:center;justify-content:space-between;padding:1.5rem 2rem;border-bottom:1px solid var(--rule);position:sticky;top:0;background:var(--cream);z-index:1;}
+.admin-header h2{font-family:var(--serif);font-size:1.3rem;font-weight:500;}
+.admin-close{background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--ink-muted);line-height:1;padding:.2rem;}
+.admin-close:hover{color:var(--ink);}
+.admin-tabs{display:flex;border-bottom:1px solid var(--rule);padding:0 2rem;}
+.admin-tab{padding:.9rem 1.2rem;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border:none;background:none;color:var(--ink-muted);font-family:var(--sans);border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .2s;}
+.admin-tab.active{color:var(--brg);border-bottom-color:var(--brg);}
+.admin-content{padding:2rem;}
+.admin-section{display:none;}
+.admin-section.active{display:block;}
+.form-group{margin-bottom:1.25rem;}
+.form-group label{display:block;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:.45rem;font-weight:400;}
+.form-group input,.form-group textarea,.form-group select{width:100%;background:#fff;border:1px solid var(--rule);padding:.7rem .9rem;font-family:var(--sans);font-size:.9rem;color:var(--ink);border-radius:3px;outline:none;transition:border-color .2s;}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--brg);}
+.form-group textarea{min-height:140px;resize:vertical;line-height:1.7;}
+.btn-primary{background:var(--brg);color:#fff;border:none;padding:.7rem 1.5rem;font-family:var(--sans);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;font-weight:500;cursor:pointer;border-radius:3px;transition:background .2s;}
+.btn-primary:hover{background:var(--brg-light);}
+.btn-danger{background:transparent;color:#c0392b;border:1px solid rgba(192,57,43,.3);padding:.5rem 1rem;font-family:var(--sans);font-size:.73rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;border-radius:3px;transition:all .2s;}
+.btn-danger:hover{background:rgba(192,57,43,.08);}
+.btn-secondary{background:transparent;color:var(--brg);border:1px solid var(--brg);padding:.5rem 1rem;font-family:var(--sans);font-size:.73rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;border-radius:3px;transition:all .2s;margin-right:.5rem;}
+.btn-secondary:hover{background:var(--brg-muted);}
+.article-list-item{display:flex;align-items:center;justify-content:space-between;padding:1rem 0;border-bottom:1px solid var(--rule);gap:1rem;}
+.article-list-meta{flex:1;}
+.article-list-title{font-family:var(--serif);font-size:1rem;font-weight:500;margin-bottom:.2rem;}
+.article-list-info{font-size:.75rem;color:var(--ink-muted);}
+.article-list-actions{display:flex;gap:.5rem;flex-shrink:0;}
+.watchlist-admin-item{display:flex;align-items:center;gap:.75rem;padding:.75rem 0;border-bottom:1px solid var(--rule);}
+.watchlist-admin-item input{margin:0;}
+.watchlist-admin-item .wl-ticker{font-family:var(--mono);font-size:.85rem;font-weight:500;min-width:60px;}
+.watchlist-admin-item .wl-company{font-size:.82rem;color:var(--ink-soft);flex:1;}
+.add-stock-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:.75rem;margin-top:1.25rem;align-items:end;}
+.add-stock-row .form-group{margin:0;}
+.divider{border:none;border-top:1px solid var(--rule);margin:1.5rem 0;}
+.success-msg{background:var(--brg-muted);border:1px solid var(--brg);color:var(--brg);padding:.6rem 1rem;border-radius:3px;font-size:.82rem;margin-bottom:1rem;display:none;}
+.featured-toggle{display:flex;align-items:center;gap:.6rem;cursor:pointer;}
+.featured-toggle input[type=checkbox]{width:16px;height:16px;accent-color:var(--brg);cursor:pointer;}
+.featured-toggle span{font-size:.82rem;color:var(--ink-soft);}
+
+/* FOOTER */
+footer{border-top:1px solid var(--rule);margin-top:2rem;}
+.footer-inner{max-width:1240px;margin:0 auto;padding:2.5rem 2rem;display:flex;justify-content:space-between;align-items:center;}
+.footer-right{font-size:.73rem;color:var(--ink-muted);text-align:right;line-height:1.8;}
+.footer-disclaimer{font-size:.68rem;color:var(--ink-muted);max-width:1240px;margin:0 auto;padding:0 2rem 2rem;border-top:1px solid var(--rule);padding-top:1.25rem;line-height:1.6;}
+
+/* ANIMATIONS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .hero{grid-template-columns:1fr;gap:2.5rem;padding:3rem 1.5rem 2.5rem;}
+  .main-grid{grid-template-columns:1fr;gap:3rem;padding:2.5rem 1.5rem;}
+  nav{gap:1.2rem;}
+  .nav-cta,.admin-btn{display:none;}
+  .footer-inner{flex-direction:column;gap:1.25rem;text-align:center;}
+  .footer-right{text-align:center;}
+  .add-stock-row{grid-template-columns:1fr 1fr;gap:.6rem;}
+}
+@media(max-width:600px){
+  .header-inner{padding:0 1rem;}
+  nav{gap:.8rem;}
+  nav a{font-size:.7rem;}
+  #article-view{padding:2.5rem 1.25rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <a href="#" class="logo" onclick="showPage('home');return false;">
+      <span class="logo-name">Kapital<span>werk</span></span>
+      <span class="logo-tagline">Märkte · Ideen · Perspektiven</span>
+    </a>
+    <nav>
+      <a href="#" onclick="showPage('home');return false;">Artikel</a>
+      <a href="#watchlist-section">Watchlist</a>
+      <a href="#" onclick="showPage('home');return false;">Über mich</a>
+      <a href="https://raphaels-newsletter-0e69d6.beehiiv.com/" target="_blank" class="nav-cta">Newsletter</a>
+      <button class="admin-btn" onclick="openAdmin()">⚙ Verwalten</button>
+    </nav>
+  </div>
+</header>
+
+<!-- HOME PAGE -->
+<div id="page-home" class="page active">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-left">
+      <h1>Märkte lesen.<br><em>Klüger</em> investieren.</h1>
+      <p>Quartalszahlen, Aktienideen und Marktgedanken — kein Rauschen, keine heißen Tipps. Nur was wirklich interessant ist.</p>
+    </div>
+    <div class="hero-right">
+      <div class="ticker-label">Marktüberblick</div>
+      <div id="ticker-list"></div>
+    </div>
+  </section>
+
+  <!-- MAIN -->
+  <div class="main-grid">
+    <main>
+      <div class="section-header">
+        <span class="section-title">Neueste Artikel</span>
+      </div>
+      <div id="post-feed"></div>
+    </main>
+
+    <aside>
+      <div class="sidebar-section" id="watchlist-section">
+        <div class="sidebar-title">Watchlist</div>
+        <div id="watchlist-display"></div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Earnings Kalender</div>
+        <div class="earnings-item">
+          <div class="earnings-date"><span class="earnings-day">06</span><span class="earnings-month">Mär</span></div>
+          <div><div class="earnings-company">CrowdStrike</div><div class="earnings-time">Nach Börsenschluss</div></div>
+          <div class="earnings-est"><span class="est-label">EPS est.</span>$0.84</div>
+        </div>
+        <div class="earnings-item">
+          <div class="earnings-date"><span class="earnings-day">12</span><span class="earnings-month">Mär</span></div>
+          <div><div class="earnings-company">Adobe</div><div class="earnings-time">Nach Börsenschluss</div></div>
+          <div class="earnings-est"><span class="est-label">EPS est.</span>$4.97</div>
+        </div>
+        <div class="earnings-item">
+          <div class="earnings-date"><span class="earnings-day">20</span><span class="earnings-month">Mär</span></div>
+          <div><div class="earnings-company">Nike</div><div class="earnings-time">Nach Börsenschluss</div></div>
+          <div class="earnings-est"><span class="est-label">EPS est.</span>$0.29</div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="newsletter-box">
+          <h4>Kein Artikel verpassen.</h4>
+          <p>Neue Ideen, Quartalszahlen und Marktgedanken — direkt ins Postfach.</p>
+          <a href="https://raphaels-newsletter-0e69d6.beehiiv.com/" target="_blank" class="newsletter-cta">Jetzt anmelden →</a>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- ARTICLE PAGE -->
+<div id="page-article" class="page">
+  <div id="article-view">
+    <button class="article-back" onclick="showPage('home')">← Zurück zur Übersicht</button>
+    <div class="article-header">
+      <div class="post-meta" id="article-meta"></div>
+      <h1 id="article-title"></h1>
+    </div>
+    <div class="article-body" id="article-body"></div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="admin-panel">
+  <div class="admin-modal">
+    <div class="admin-header">
+      <h2>Kapitalwerk verwalten</h2>
+      <button class="admin-close" onclick="closeAdmin()">✕</button>
+    </div>
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="switchTab('articles')">Artikel</button>
+      <button class="admin-tab" onclick="switchTab('new-article')">Neuer Artikel</button>
+      <button class="admin-tab" onclick="switchTab('watchlist')">Watchlist</button>
+      <button class="admin-tab" onclick="switchTab('ticker')">Marktdaten</button>
+    </div>
+    <div class="admin-content">
+
+      <!-- ARTICLES LIST -->
+      <div class="admin-section active" id="tab-articles">
+        <div id="articles-list"></div>
+      </div>
+
+      <!-- NEW / EDIT ARTICLE -->
+      <div class="admin-section" id="tab-new-article">
+        <div class="success-msg" id="article-success">Artikel gespeichert ✓</div>
+        <input type="hidden" id="edit-article-id">
+        <div class="form-group">
+          <label>Titel</label>
+          <input type="text" id="article-title-input" placeholder="z.B. NVIDIA Q4: Die Zahlen hinter dem Hype">
+        </div>
+        <div class="form-group">
+          <label>Kategorie</label>
+          <select id="article-category">
+            <option value="Quartalszahlen">Quartalszahlen</option>
+            <option value="Aktienidee">Aktienidee</option>
+            <option value="Marktgedanke">Marktgedanke</option>
+            <option value="Chart">Chart</option>
+            <option value="Makro">Makro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Kurzzusammenfassung (Vorschautext)</label>
+          <textarea id="article-excerpt" placeholder="2-3 Sätze die neugierig machen..." style="min-height:80px;"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Artikelinhalt (vollständiger Text)</label>
+          <textarea id="article-content" placeholder="Schreibe deinen Artikel hier. Für Absätze einfach eine Leerzeile lassen. Für Überschriften: ## Überschrift. Für Zitate: > Zitat"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="featured-toggle">
+            <input type="checkbox" id="article-featured">
+            <span>Als Hauptartikel anzeigen (groß oben)</span>
+          </label>
+        </div>
+        <div style="display:flex;gap:.75rem;align-items:center;">
+          <button class="btn-primary" onclick="saveArticle()">Artikel speichern</button>
+          <button class="btn-secondary" onclick="resetArticleForm()">Neu</button>
+        </div>
+      </div>
+
+      <!-- WATCHLIST -->
+      <div class="admin-section" id="tab-watchlist">
+        <div class="success-msg" id="watchlist-success">Watchlist gespeichert ✓</div>
+        <div id="watchlist-admin-list"></div>
+        <hr class="divider">
+        <p style="font-size:.8rem;color:var(--ink-muted);margin-bottom:1rem;">Neue Aktie hinzufügen:</p>
+        <div class="add-stock-row">
+          <div class="form-group"><label>Ticker</label><input type="text" id="new-ticker" placeholder="AAPL" style="text-transform:uppercase;"></div>
+          <div class="form-group"><label>Unternehmen</label><input type="text" id="new-company" placeholder="Apple Inc."></div>
+          <div class="form-group"><label>Kurs</label><input type="text" id="new-price" placeholder="$182.40"></div>
+          <div class="form-group"><label>Änderung</label><input type="text" id="new-change" placeholder="+1.2%"></div>
+          <button class="btn-primary" onclick="addStock()" style="height:38px;margin-top:auto;">+</button>
+        </div>
+        <br>
+        <button class="btn-primary" onclick="saveWatchlist()">Watchlist speichern</button>
+      </div>
+
+      <!-- TICKER / MARKTDATEN -->
+      <div class="admin-section" id="tab-ticker">
+        <div class="success-msg" id="ticker-success">Marktdaten gespeichert ✓</div>
+        <p style="font-size:.82rem;color:var(--ink-muted);margin-bottom:1.5rem;">Passe die Marktdaten im Hero-Bereich an.</p>
+        <div id="ticker-admin-list"></div>
+        <hr class="divider">
+        <p style="font-size:.8rem;color:var(--ink-muted);margin-bottom:1rem;">Neues Instrument hinzufügen:</p>
+        <div class="add-stock-row">
+          <div class="form-group"><label>Name</label><input type="text" id="new-t-name" placeholder="S&P 500"></div>
+          <div class="form-group"><label>Kurs</label><input type="text" id="new-t-value" placeholder="5.862,10"></div>
+          <div class="form-group"><label>Änderung</label><input type="text" id="new-t-change" placeholder="+0,84%"></div>
+          <div class="form-group"><label>Richtung</label>
+            <select id="new-t-dir"><option value="up">↑ Grün</option><option value="down">↓ Rot</option></select>
+          </div>
+          <button class="btn-primary" onclick="addTicker()" style="height:38px;margin-top:auto;">+</button>
+        </div>
+        <br>
+        <button class="btn-primary" onclick="saveTicker()">Marktdaten speichern</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="logo-name" style="font-family:var(--serif);font-size:1.1rem;font-weight:600;letter-spacing:-.02em;">Kapital<span style="color:var(--brg);">werk</span></div>
+      <div style="font-size:.78rem;color:var(--ink-muted);margin-top:.3rem;">Märkte. Ideen. Perspektiven.</div>
+    </div>
+    <div class="footer-right">© 2025 Kapitalwerk<br>Keine Anlageberatung.</div>
+  </div>
+  <div class="footer-disclaimer"><strong>Haftungsausschluss:</strong> Alle Inhalte dienen ausschließlich zu Informationszwecken und stellen keine Anlageberatung dar. Investitionen in Wertpapiere sind mit Risiken verbunden.</div>
+</footer>
+
+<script>
+// ── DATA STORE ──
+const STORAGE_KEYS = { articles:'kw_articles', watchlist:'kw_watchlist', ticker:'kw_ticker' };
+
+function load(key){ try{ const d=localStorage.getItem(key); return d?JSON.parse(d):null; }catch(e){ return null; } }
+function save(key,data){ localStorage.setItem(key,JSON.stringify(data)); }
+
+// DEFAULT DATA
+const defaultArticles = [
+  {
+    id:1, title:'NVIDIA Q4 2024: Die Zahlen hinter dem Hype — und was sie wirklich bedeuten',
+    category:'Quartalszahlen', date:'3. März 2025', featured:true,
+    excerpt:'$39,3 Mrd. Umsatz. +78% YoY. Die Headline ist bekannt. Aber wer zwischen den Zeilen liest, findet ein interessantes Bild: Während die Datacenter-Sparte weiter explodiert, zeigen sich erste Zeichen einer Normalisierung in den Margen.',
+    content:'## Die Zahlen im Überblick\n\nNVIDIA hat wieder geliefert. $39,3 Mrd. Umsatz im vierten Quartal, ein Wachstum von 78% gegenüber dem Vorjahr. Die Datacenter-Sparte macht inzwischen über 91% des Gesamtumsatzes aus — ein Wert, der vor drei Jahren noch unvorstellbar war.\n\n## Was hinter den Zahlen steckt\n\n> Der Markt bewertet nicht die Gegenwart — er kauft eine Erwartung über die nächsten 12 Monate.\n\nInteressant ist der Blick auf die Gross Margin. Mit 73,5% liegt sie leicht unter dem Rekordhoch aus Q2 2024. Das ist kein Drama, aber ein Signal: Die Blackwell-Architektur läuft noch nicht auf vollen Touren, die Hochlaufkosten drücken etwas auf die Marge.\n\n## Was das für Investoren bedeutet\n\nNVIDIA wird weiterhin von zwei Tailwinds getragen: Der KI-Infrastruktur-Boom und der Übergang von CPU- zu GPU-Computing. Solange Microsoft, Google, Amazon und Meta ihre CapEx-Pläne nicht kürzen, bleibt NVIDIA der klare Hauptprofiteur.\n\nDie Bewertung ist allerdings nicht günstig. Wer jetzt einsteigt, kauft eine Wachstumsstory — und muss sich bewusst sein, dass jede Enttäuschung bei den Zahlen zu harten Reaktionen führen kann.'
+  },
+  {
+    id:2, title:'Warum ich ASML für eine der interessantesten europäischen Positionen halte',
+    category:'Aktienidee', date:'28. Februar 2025', featured:false,
+    excerpt:'Das Monopol auf EUV-Lithografie ist real. Die Frage ist nicht ob, sondern wann der nächste Chip-Zyklus dreht — und ASML steht an jedem Ende der Lieferkette.',
+    content:'## Ein echtes Monopol\n\nEs gibt wenige Unternehmen auf der Welt, die ein echtes technologisches Monopol besitzen. ASML ist eines davon. Kein anderes Unternehmen der Welt kann EUV-Lithografiemaschinen herstellen — die Geräte, ohne die moderne Chips bei 3nm und darunter nicht gefertigt werden können.\n\n## Die Zahlen sprechen für sich\n\nASML liefert an TSMC, Samsung, Intel — alle, die modernste Chips produzieren wollen, müssen bei ASML kaufen. Das schafft eine Preissetzungsmacht, die in der Industrie ihresgleichen sucht.\n\n> Eine EUV-Maschine kostet über 150 Millionen Euro. Und die Kunden stehen Schlange.\n\n## Risiken nicht vergessen\n\nChina-Exposure ist das größte Risiko. Die Exportbeschränkungen der USA treffen ASML empfindlich — ein signifikanter Teil des Umsatzes entfiel auf chinesische Kunden. Das wird nicht besser werden.\n\nDennoch: Wer langfristig denkt, kauft ASML bei Schwäche.'
+  },
+  {
+    id:3, title:'Fed, Inflation und das Schweigen der Anleihemärkte',
+    category:'Marktgedanke', date:'24. Februar 2025', featured:false,
+    excerpt:'Während alle auf Powell schauen, erzählt die Zinskurve eine andere Geschichte. Inversion, Normalisierung, oder ist diesmal wirklich alles anders?',
+    content:'## Was die Zinskurve sagt\n\nDie Zinskurve ist seit über zwei Jahren invertiert. Normalerweise ein verlässliches Rezessionssignal — doch die Wirtschaft läuft weiter. Ist diesmal wirklich alles anders?\n\n## Meine Interpretation\n\nIch glaube nicht, dass es grundlegend anders ist. Was sich geändert hat: Die Zeitverzögerung zwischen Inversion und Abschwächung ist länger geworden — teils weil die Fiskalpolitik massiv gegengesteuert hat.\n\n> Der Anleihemarkt hat bisher immer recht behalten. Er braucht manchmal nur mehr Geduld.\n\nDie Fed ist in einer Zwickmühle: Zu früh senken riskiert eine Inflation-Rückkehr, zu spät senken würgt die Wirtschaft ab. Powell weiß das. Deshalb kommuniziert er so vorsichtig.'
+  }
+];
+
+const defaultWatchlist = [
+  {ticker:'NVDA',company:'NVIDIA Corp.',price:'$867,40',change:'+2,14%',dir:'up'},
+  {ticker:'ASML',company:'ASML Holding NV',price:'€712,80',change:'−0,87%',dir:'down'},
+  {ticker:'BRK.B',company:'Berkshire Hathaway',price:'$441,20',change:'+0,44%',dir:'up'},
+  {ticker:'SAP',company:'SAP SE',price:'€218,50',change:'+1,33%',dir:'up'}
+];
+
+const defaultTicker = [
+  {name:'S&P 500',value:'5.862,10',change:'+0,84%',dir:'up'},
+  {name:'DAX',value:'22.141,33',change:'+1,12%',dir:'up'},
+  {name:'NASDAQ',value:'18.544,80',change:'−0,38%',dir:'down'},
+  {name:'EUR/USD',value:'1,0821',change:'+0,21%',dir:'up'},
+  {name:'Gold',value:'2.911,40',change:'+0,55%',dir:'up'}
+];
+
+// INIT DATA
+let articles = load(STORAGE_KEYS.articles) || defaultArticles;
+let watchlist = load(STORAGE_KEYS.watchlist) || defaultWatchlist;
+let ticker = load(STORAGE_KEYS.ticker) || defaultTicker;
+
+// ── RENDER ──
+function renderAll(){ renderFeed(); renderWatchlistDisplay(); renderTickerDisplay(); }
+
+function renderFeed(){
+  const el = document.getElementById('post-feed');
+  if(!el) return;
+  const featured = articles.find(a=>a.featured);
+  const rest = articles.filter(a=>!a.featured);
+  let html = '';
+  if(featured){
+    html += `<article class="post-featured">
+      <div class="post-meta">
+        <span class="tag">${featured.category}</span>
+        <span class="post-date">${featured.date}</span>
+        <span class="featured-badge">⬡ Leitartikel</span>
+      </div>
+      <h2><a onclick="openArticle(${featured.id});return false;" href="#">${featured.title}</a></h2>
+      <p class="post-excerpt">${featured.excerpt}</p>
+      <button class="read-more" onclick="openArticle(${featured.id})">Weiterlesen →</button>
+    </article>`;
+  }
+  if(rest.length){
+    html += '<div class="post-list">';
+    rest.forEach((a,i)=>{
+      html += `<article class="post-item" style="animation-delay:${0.1+i*0.08}s">
+        <div class="post-meta">
+          <span class="tag tag-outline">${a.category}</span>
+          <span class="post-date">${a.date}</span>
+        </div>
+        <h3><a onclick="openArticle(${a.id});return false;" href="#">${a.title}</a></h3>
+        <p>${a.excerpt}</p>
+        <br><button class="read-more" onclick="openArticle(${a.id})" style="margin-top:.5rem;">Weiterlesen →</button>
+      </article>`;
+    });
+    html += '</div>';
+  }
+  if(!articles.length) html = '<p style="color:var(--ink-muted);font-size:.9rem;">Noch keine Artikel. Klicke auf "Verwalten" um loszulegen.</p>';
+  el.innerHTML = html;
+}
+
+function renderWatchlistDisplay(){
+  const el = document.getElementById('watchlist-display');
+  if(!el) return;
+  el.innerHTML = watchlist.map(s=>`
+    <div class="watchlist-item">
+      <div><div class="watchlist-ticker">${s.ticker}</div><div class="watchlist-company">${s.company}</div></div>
+      <div><div class="watchlist-price">${s.price}</div><div class="watchlist-pct ${s.dir}">${s.change}</div></div>
+    </div>`).join('');
+}
+
+function renderTickerDisplay(){
+  const el = document.getElementById('ticker-list');
+  if(!el) return;
+  el.innerHTML = ticker.map(t=>`
+    <div class="ticker-row">
+      <span class="ticker-name">${t.name}</span>
+      <span class="ticker-value">${t.value}</span>
+      <span class="ticker-change ${t.dir}-bg">${t.change}</span>
+    </div>`).join('');
+}
+
+// ── ARTICLE VIEW ──
+function openArticle(id){
+  const a = articles.find(x=>x.id===id);
+  if(!a) return;
+  document.getElementById('article-title').textContent = a.title;
+  document.getElementById('article-meta').innerHTML = `<span class="tag">${a.category}</span><span class="post-date">${a.date}</span>`;
+  document.getElementById('article-body').innerHTML = parseContent(a.content);
+  showPage('article');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function parseContent(text){
+  if(!text) return '';
+  return text.split('\n').map(line=>{
+    if(line.startsWith('## ')) return `<h2>${line.slice(3)}</h2>`;
+    if(line.startsWith('> ')) return `<blockquote>${line.slice(2)}</blockquote>`;
+    if(line.trim()==='') return '';
+    return `<p>${line}</p>`;
+  }).join('');
+}
+
+// ── PAGE NAV ──
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(name==='home') window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── ADMIN ──
+function openAdmin(){
+  document.getElementById('admin-panel').classList.add('open');
+  renderAdminArticles();
+  renderAdminWatchlist();
+  renderAdminTicker();
+}
+
+function closeAdmin(){ document.getElementById('admin-panel').classList.remove('open'); }
+
+function switchTab(tab){
+  document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.admin-section').forEach(s=>s.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+
+function renderAdminArticles(){
+  const el = document.getElementById('articles-list');
+  if(!articles.length){el.innerHTML='<p style="color:var(--ink-muted);font-size:.85rem;">Noch keine Artikel.</p>';return;}
+  el.innerHTML = articles.map(a=>`
+    <div class="article-list-item">
+      <div class="article-list-meta">
+        <div class="article-list-title">${a.title}</div>
+        <div class="article-list-info">${a.category} · ${a.date}${a.featured?' · ⬡ Leitartikel':''}</div>
+      </div>
+      <div class="article-list-actions">
+        <button class="btn-secondary" onclick="editArticle(${a.id})">Bearbeiten</button>
+        <button class="btn-danger" onclick="deleteArticle(${a.id})">Löschen</button>
+      </div>
+    </div>`).join('');
+}
+
+function editArticle(id){
+  const a = articles.find(x=>x.id===id);
+  if(!a) return;
+  document.getElementById('edit-article-id').value = a.id;
+  document.getElementById('article-title-input').value = a.title;
+  document.getElementById('article-category').value = a.category;
+  document.getElementById('article-excerpt').value = a.excerpt;
+  document.getElementById('article-content').value = a.content;
+  document.getElementById('article-featured').checked = a.featured;
+  // switch to edit tab
+  document.querySelectorAll('.admin-tab').forEach((t,i)=>{ t.classList.toggle('active',i===1); });
+  document.querySelectorAll('.admin-section').forEach((s,i)=>{ s.classList.toggle('active',i===1); });
+}
+
+function deleteArticle(id){
+  if(!confirm('Artikel wirklich löschen?')) return;
+  articles = articles.filter(a=>a.id!==id);
+  save(STORAGE_KEYS.articles, articles);
+  renderAdminArticles();
+  renderFeed();
+}
+
+function saveArticle(){
+  const id = parseInt(document.getElementById('edit-article-id').value)||0;
+  const isFeatured = document.getElementById('article-featured').checked;
+  if(isFeatured) articles.forEach(a=>a.featured=false);
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('de-DE',{day:'numeric',month:'long',year:'numeric'});
+  const data = {
+    id: id||Date.now(),
+    title: document.getElementById('article-title-input').value||'Ohne Titel',
+    category: document.getElementById('article-category').value,
+    date: dateStr,
+    featured: isFeatured,
+    excerpt: document.getElementById('article-excerpt').value,
+    content: document.getElementById('article-content').value
+  };
+  if(id){ const idx=articles.findIndex(a=>a.id===id); if(idx>-1) articles[idx]=data; else articles.unshift(data); }
+  else { articles.unshift(data); }
+  save(STORAGE_KEYS.articles, articles);
+  renderFeed();
+  renderAdminArticles();
+  const msg = document.getElementById('article-success');
+  msg.style.display='block';
+  setTimeout(()=>msg.style.display='none',2500);
+  resetArticleForm();
+}
+
+function resetArticleForm(){
+  document.getElementById('edit-article-id').value='';
+  document.getElementById('article-title-input').value='';
+  document.getElementById('article-excerpt').value='';
+  document.getElementById('article-content').value='';
+  document.getElementById('article-featured').checked=false;
+  document.getElementById('article-category').value='Quartalszahlen';
+}
+
+// ── WATCHLIST ADMIN ──
+function renderAdminWatchlist(){
+  const el = document.getElementById('watchlist-admin-list');
+  el.innerHTML = watchlist.map((s,i)=>`
+    <div class="watchlist-admin-item">
+      <span class="wl-ticker">${s.ticker}</span>
+      <span class="wl-company">${s.company}</span>
+      <input type="text" value="${s.price}" onchange="watchlist[${i}].price=this.value" style="width:90px;padding:.3rem .5rem;font-family:var(--mono);font-size:.8rem;border:1px solid var(--rule);border-radius:2px;background:#fff;">
+      <input type="text" value="${s.change}" onchange="watchlist[${i}].change=this.value" style="width:80px;padding:.3rem .5rem;font-family:var(--mono);font-size:.8rem;border:1px solid var(--rule);border-radius:2px;background:#fff;">
+      <select onchange="watchlist[${i}].dir=this.value" style="padding:.3rem;border:1px solid var(--rule);border-radius:2px;background:#fff;font-size:.8rem;">
+        <option value="up" ${s.dir==='up'?'selected':''}>↑</option>
+        <option value="down" ${s.dir==='down'?'selected':''}>↓</option>
+      </select>
+      <button class="btn-danger" onclick="removeStock(${i})" style="padding:.3rem .7rem;">✕</button>
+    </div>`).join('');
+}
+
+function addStock(){
+  const t=document.getElementById('new-ticker').value.trim().toUpperCase();
+  const c=document.getElementById('new-company').value.trim();
+  const p=document.getElementById('new-price').value.trim();
+  const ch=document.getElementById('new-change').value.trim();
+  const d=ch.startsWith('-')||ch.startsWith('−')?'down':'up';
+  if(!t||!c) return;
+  watchlist.push({ticker:t,company:c,price:p||'—',change:ch||'—',dir:d});
+  document.getElementById('new-ticker').value='';
+  document.getElementById('new-company').value='';
+  document.getElementById('new-price').value='';
+  document.getElementById('new-change').value='';
+  renderAdminWatchlist();
+}
+
+function removeStock(i){ watchlist.splice(i,1); renderAdminWatchlist(); }
+
+function saveWatchlist(){
+  save(STORAGE_KEYS.watchlist, watchlist);
+  renderWatchlistDisplay();
+  const msg=document.getElementById('watchlist-success');
+  msg.style.display='block';
+  setTimeout(()=>msg.style.display='none',2000);
+}
+
+// ── TICKER ADMIN ──
+function renderAdminTicker(){
+  const el = document.getElementById('ticker-admin-list');
+  el.innerHTML = ticker.map((t,i)=>`
+    <div class="watchlist-admin-item">
+      <span class="wl-ticker" style="min-width:80px;">${t.name}</span>
+      <input type="text" value="${t.value}" onchange="ticker[${i}].value=this.value" style="width:100px;padding:.3rem .5rem;font-family:var(--mono);font-size:.8rem;border:1px solid var(--rule);border-radius:2px;background:#fff;">
+      <input type="text" value="${t.change}" onchange="ticker[${i}].change=this.value" style="width:80px;padding:.3rem .5rem;font-family:var(--mono);font-size:.8rem;border:1px solid var(--rule);border-radius:2px;background:#fff;">
+      <select onchange="ticker[${i}].dir=this.value" style="padding:.3rem;border:1px solid var(--rule);border-radius:2px;background:#fff;font-size:.8rem;">
+        <option value="up" ${t.dir==='up'?'selected':''}>↑ Grün</option>
+        <option value="down" ${t.dir==='down'?'selected':''}>↓ Rot</option>
+      </select>
+      <button class="btn-danger" onclick="removeTicker(${i})" style="padding:.3rem .7rem;">✕</button>
+    </div>`).join('');
+}
+
+function addTicker(){
+  const n=document.getElementById('new-t-name').value.trim();
+  const v=document.getElementById('new-t-value').value.trim();
+  const c=document.getElementById('new-t-change').value.trim();
+  const d=document.getElementById('new-t-dir').value;
+  if(!n) return;
+  ticker.push({name:n,value:v||'—',change:c||'—',dir:d});
+  document.getElementById('new-t-name').value='';
+  document.getElementById('new-t-value').value='';
+  document.getElementById('new-t-change').value='';
+  renderAdminTicker();
+}
+
+function removeTicker(i){ ticker.splice(i,1); renderAdminTicker(); }
+
+function saveTicker(){
+  save(STORAGE_KEYS.ticker, ticker);
+  renderTickerDisplay();
+  const msg=document.getElementById('ticker-success');
+  msg.style.display='block';
+  setTimeout(()=>msg.style.display='none',2000);
+}
+
+// Close admin on backdrop click
+document.getElementById('admin-panel').addEventListener('click',function(e){
+  if(e.target===this) closeAdmin();
+});
+
+// ── INIT ──
+renderAll();
+</script>
+</body>
+</html>
