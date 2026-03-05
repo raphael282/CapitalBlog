@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kapitalwerk — Märkte. Ideen. Perspektiven.</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brg: #2C5F2E;
+    --brg-light: #3a7a3d;
+    --brg-pale: #eef4ee;
+    --brg-muted: rgba(44,95,46,0.08);
+    --cream: #FAFAF7;
+    --ink: #181815;
+    --ink-soft: #4a4a44;
+    --ink-muted: #8a8a80;
+    --rule: rgba(44,95,46,0.15);
+    --serif: 'Playfair Display', Georgia, serif;
+    --sans: 'DM Sans', system-ui, sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { font-size: 16px; scroll-behavior: smooth; }
+
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-weight: 300;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── NOISE TEXTURE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(250,250,247,0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    text-decoration: none;
+  }
+
+  .logo-name {
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .logo-name span {
+    color: var(--brg);
+  }
+
+  .logo-tagline {
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    font-weight: 400;
+  }
+
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+  }
+
+  nav a {
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    text-decoration: none;
+    font-weight: 400;
+    transition: color 0.2s;
+    position: relative;
+  }
+
+  nav a::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: var(--brg);
+    transition: width 0.25s ease;
+  }
+
+  nav a:hover { color: var(--brg); }
+  nav a:hover::after { width: 100%; }
+
+  .nav-cta {
+    background: var(--brg);
+    color: #fff !important;
+    padding: 0.5rem 1.2rem;
+    border-radius: 2px;
+    font-size: 0.75rem !important;
+    letter-spacing: 0.08em !important;
+    transition: background 0.2s !important;
+  }
+
+  .nav-cta::after { display: none !important; }
+  .nav-cta:hover { background: var(--brg-light) !important; color: #fff !important; }
+
+  /* ── HERO ── */
+  .hero {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 6rem 2rem 4rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: end;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .hero-left h1 {
+    font-family: var(--serif);
+    font-size: clamp(2.8rem, 5vw, 4.5rem);
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-left h1 em {
+    color: var(--brg);
+    font-style: italic;
+  }
+
+  .hero-left p {
+    font-size: 1.05rem;
+    color: var(--ink-soft);
+    max-width: 460px;
+    line-height: 1.8;
+  }
+
+  .hero-right {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .market-ticker {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .ticker-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .ticker-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .ticker-name {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .ticker-value {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  .ticker-change {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 2px;
+  }
+
+  .up { color: var(--brg); }
+  .down { color: #c0392b; }
+  .up-bg { background: var(--brg-muted); color: var(--brg); }
+  .down-bg { background: rgba(192,57,43,0.08); color: #c0392b; }
+
+  /* ── MAIN CONTENT ── */
+  .main-grid {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 4rem 2rem;
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 5rem;
+  }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--brg);
+  }
+
+  .section-title {
+    font-family: var(--serif);
+    font-size: 1.1rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+  }
+
+  .section-link {
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--brg);
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  /* ── FEATURED POST ── */
+  .post-featured {
+    margin-bottom: 3rem;
+    padding-bottom: 3rem;
+    border-bottom: 1px solid var(--rule);
+    opacity: 0;
+    animation: fadeUp 0.7s ease forwards;
+    animation-delay: 0.1s;
+  }
+
+  .post-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .tag {
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    font-weight: 500;
+    padding: 0.25rem 0.7rem;
+    background: var(--brg);
+    color: #fff;
+    border-radius: 2px;
+  }
+
+  .tag-outline {
+    background: transparent;
+    color: var(--brg);
+    border: 1px solid var(--brg);
+  }
+
+  .post-date {
+    font-size: 0.75rem;
+    color: var(--ink-muted);
+    letter-spacing: 0.05em;
+  }
+
+  .featured-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-left: auto;
+  }
+
+  .post-featured h2 {
+    font-family: var(--serif);
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+    color: var(--ink);
+  }
+
+  .post-featured h2 a {
+    text-decoration: none;
+    color: inherit;
+    transition: color 0.2s;
+  }
+
+  .post-featured h2 a:hover { color: var(--brg); }
+
+  .post-excerpt {
+    font-size: 1rem;
+    color: var(--ink-soft);
+    line-height: 1.8;
+    margin-bottom: 1.5rem;
+    max-width: 600px;
+  }
+
+  .post-chart-preview {
+    background: linear-gradient(135deg, var(--brg-pale) 0%, rgba(44,95,46,0.04) 100%);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--brg);
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    border-radius: 0 4px 4px 0;
+  }
+
+  .chart-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--brg);
+    margin-bottom: 0.75rem;
+    font-weight: 500;
+  }
+
+  /* Simple SVG sparkline chart */
+  .sparkline-container {
+    position: relative;
+    height: 80px;
+  }
+
+  .read-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--brg);
+    text-decoration: none;
+    font-weight: 500;
+    transition: gap 0.2s;
+  }
+
+  .read-more:hover { gap: 0.8rem; }
+
+  /* ── STANDARD POSTS ── */
+  .post-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .post-item {
+    padding: 2rem 0;
+    border-bottom: 1px solid var(--rule);
+    opacity: 0;
+    animation: fadeUp 0.7s ease forwards;
+  }
+
+  .post-item:nth-child(1) { animation-delay: 0.2s; }
+  .post-item:nth-child(2) { animation-delay: 0.3s; }
+  .post-item:nth-child(3) { animation-delay: 0.4s; }
+  .post-item:nth-child(4) { animation-delay: 0.5s; }
+
+  .post-item h3 {
+    font-family: var(--serif);
+    font-size: 1.3rem;
+    font-weight: 500;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.6rem;
+  }
+
+  .post-item h3 a {
+    text-decoration: none;
+    color: var(--ink);
+    transition: color 0.2s;
+  }
+
+  .post-item h3 a:hover { color: var(--brg); }
+
+  .post-item p {
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    line-height: 1.7;
+  }
+
+  .pullquote {
+    border-left: 2px solid var(--brg);
+    padding: 0.5rem 1rem;
+    margin: 1rem 0;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 1rem;
+    color: var(--brg);
+    background: var(--brg-muted);
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    position: relative;
+  }
+
+  .sidebar-section {
+    margin-bottom: 3rem;
+    opacity: 0;
+    animation: fadeUp 0.7s ease forwards;
+    animation-delay: 0.3s;
+  }
+
+  .sidebar-title {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .watchlist-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .watchlist-name {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .watchlist-ticker {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .watchlist-company {
+    font-size: 0.7rem;
+    color: var(--ink-muted);
+  }
+
+  .watchlist-data {
+    text-align: right;
+  }
+
+  .watchlist-price {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .watchlist-pct {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+  }
+
+  /* Earnings calendar */
+  .earnings-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .earnings-date {
+    min-width: 42px;
+    text-align: center;
+    background: var(--brg-muted);
+    border: 1px solid var(--rule);
+    padding: 0.3rem 0.4rem;
+    border-radius: 3px;
+  }
+
+  .earnings-day {
+    display: block;
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--brg);
+    line-height: 1;
+  }
+
+  .earnings-month {
+    display: block;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+
+  .earnings-info {
+    flex: 1;
+  }
+
+  .earnings-company {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .earnings-time {
+    font-size: 0.7rem;
+    color: var(--ink-muted);
+  }
+
+  .earnings-est {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+    text-align: right;
+  }
+
+  .est-label {
+    font-size: 0.6rem;
+    color: var(--ink-muted);
+    display: block;
+  }
+
+  /* Newsletter box */
+  .newsletter-box {
+    background: var(--brg);
+    padding: 2rem;
+    border-radius: 4px;
+  }
+
+  .newsletter-box h4 {
+    font-family: var(--serif);
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #fff;
+    margin-bottom: 0.5rem;
+  }
+
+  .newsletter-box p {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.75);
+    margin-bottom: 1.25rem;
+    line-height: 1.6;
+  }
+
+  .newsletter-input {
+    width: 100%;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: #fff;
+    padding: 0.75rem 1rem;
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    border-radius: 2px;
+    margin-bottom: 0.75rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .newsletter-input::placeholder { color: rgba(255,255,255,0.4); }
+  .newsletter-input:focus { border-color: rgba(255,255,255,0.6); }
+
+  .newsletter-btn {
+    width: 100%;
+    background: #fff;
+    color: var(--brg);
+    border: none;
+    padding: 0.75rem;
+    font-family: var(--sans);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: opacity 0.2s;
+  }
+
+  .newsletter-btn:hover { opacity: 0.9; }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--rule);
+    margin-top: 2rem;
+  }
+
+  .footer-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer-left .logo-name {
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .footer-tagline {
+    font-size: 0.8rem;
+    color: var(--ink-muted);
+  }
+
+  .footer-right {
+    font-size: 0.75rem;
+    color: var(--ink-muted);
+    text-align: right;
+    line-height: 1.8;
+  }
+
+  .footer-disclaimer {
+    font-size: 0.7rem;
+    color: var(--ink-muted);
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem 2rem;
+    border-top: 1px solid var(--rule);
+    padding-top: 1.5rem;
+    line-height: 1.6;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; gap: 2.5rem; padding: 3rem 1.5rem 2.5rem; }
+    .main-grid { grid-template-columns: 1fr; gap: 3rem; padding: 2.5rem 1.5rem; }
+    .hero-left h1 { font-size: 2.4rem; }
+    nav { gap: 1.5rem; }
+    .nav-cta { display: none; }
+    .footer-inner { flex-direction: column; gap: 1.5rem; text-align: center; }
+    .footer-right { text-align: center; }
+  }
+
+  @media (max-width: 600px) {
+    .header-inner { padding: 0 1rem; }
+    nav { gap: 1rem; }
+    nav a { font-size: 0.72rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <a href="#" class="logo">
+      <span class="logo-name">Kapital<span>werk</span></span>
+      <span class="logo-tagline">Märkte · Ideen · Perspektiven</span>
+    </a>
+    <nav>
+      <a href="#">Artikel</a>
+      <a href="#">Watchlist</a>
+      <a href="#">Über mich</a>
+      <a href="#newsletter" class="nav-cta">Newsletter</a>
+    </nav>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <h1>Märkte lesen.<br><em>Klüger</em> investieren.</h1>
+    <p>Quartalszahlen, Aktienideen und Marktgedanken — kein Rauschen, keine heißen Tipps. Nur was wirklich interessant ist.</p>
+  </div>
+  <div class="hero-right">
+    <div class="market-ticker">
+      <div class="ticker-label">Marktüberblick — Stand heute</div>
+      <div class="ticker-row">
+        <span class="ticker-name">S&P 500</span>
+        <span class="ticker-value">5.862,10</span>
+        <span class="ticker-change up-bg">+0,84%</span>
+      </div>
+      <div class="ticker-row">
+        <span class="ticker-name">DAX</span>
+        <span class="ticker-value">22.141,33</span>
+        <span class="ticker-change up-bg">+1,12%</span>
+      </div>
+      <div class="ticker-row">
+        <span class="ticker-name">NASDAQ</span>
+        <span class="ticker-value">18.544,80</span>
+        <span class="ticker-change down-bg">−0,38%</span>
+      </div>
+      <div class="ticker-row">
+        <span class="ticker-name">EUR/USD</span>
+        <span class="ticker-value">1,0821</span>
+        <span class="ticker-change up-bg">+0,21%</span>
+      </div>
+      <div class="ticker-row">
+        <span class="ticker-name">Gold</span>
+        <span class="ticker-value">2.911,40</span>
+        <span class="ticker-change up-bg">+0,55%</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MAIN -->
+<div class="main-grid">
+  <!-- FEED -->
+  <main>
+    <div class="section-header">
+      <span class="section-title">Neueste Artikel</span>
+      <a href="#" class="section-link">Alle anzeigen →</a>
+    </div>
+
+    <!-- FEATURED POST -->
+    <article class="post-featured">
+      <div class="post-meta">
+        <span class="tag">Quartalszahlen</span>
+        <span class="post-date">3. März 2025</span>
+        <span class="featured-label">⬡ Leitartikel</span>
+      </div>
+      <h2><a href="#">NVIDIA Q4 2024: Die Zahlen hinter dem Hype — und was sie wirklich bedeuten</a></h2>
+      <p class="post-excerpt">$39,3 Mrd. Umsatz. +78% YoY. Die Headline ist bekannt. Aber wer zwischen den Zeilen liest, findet ein interessantes Bild: Während die Datacenter-Sparte weiter explodiert, zeigen sich erste Zeichen einer Normalisierung in den Margen. Was bedeutet das für die nächsten Quartale?</p>
+
+      <div class="post-chart-preview">
+        <div class="chart-label">NVDA — Umsatzentwicklung (Datacenter, in Mrd. USD)</div>
+        <div class="sparkline-container">
+          <svg viewBox="0 0 500 80" preserveAspectRatio="none" style="width:100%;height:100%;">
+            <defs>
+              <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#2C5F2E" stop-opacity="0.3"/>
+                <stop offset="100%" stop-color="#2C5F2E" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,70 L60,65 L120,60 L180,50 L240,42 L300,30 L360,18 L420,8 L500,4" 
+                  fill="none" stroke="#2C5F2E" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M0,70 L60,65 L120,60 L180,50 L240,42 L300,30 L360,18 L420,8 L500,4 L500,80 L0,80 Z" 
+                  fill="url(#grad)"/>
+            <circle cx="500" cy="4" r="4" fill="#2C5F2E"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="pullquote">
+        „Der Markt bewertet nicht die Gegenwart — er kauft eine Erwartung über die nächsten 12 Monate."
+      </div>
+
+      <a href="#" class="read-more">Weiterlesen →</a>
+    </article>
+
+    <!-- POST LIST -->
+    <div class="post-list">
+
+      <article class="post-item">
+        <div class="post-meta">
+          <span class="tag tag-outline">Aktienidee</span>
+          <span class="post-date">28. Februar 2025</span>
+        </div>
+        <h3><a href="#">Warum ich ASML für eine der interessantesten europäischen Positionen halte</a></h3>
+        <p>Das Monopol auf EUV-Lithografie ist real. Die Frage ist nicht ob, sondern wann der nächste Chip-Zyklus dreht — und ASML steht an jedem Ende der Lieferkette.</p>
+      </article>
+
+      <article class="post-item">
+        <div class="post-meta">
+          <span class="tag tag-outline">Marktgedanke</span>
+          <span class="post-date">24. Februar 2025</span>
+        </div>
+        <h3><a href="#">Fed, Inflation und das Schweigen der Anleihemärkte — was der Bond-Markt gerade signalisiert</a></h3>
+        <p>Während alle auf Powell schauen, erzählt die Zinskurve eine andere Geschichte. Inversion, Normalisierung, oder ist diesmal wirklich alles anders?</p>
+      </article>
+
+      <article class="post-item">
+        <div class="post-meta">
+          <span class="tag tag-outline">Chart</span>
+          <span class="post-date">19. Februar 2025</span>
+        </div>
+        <h3><a href="#">Diese eine Grafik erklärt den KI-Investitionszyklus besser als jeder Analyst</a></h3>
+        <p>CapEx von Microsoft, Google, Amazon und Meta in Q4 — zusammen über $85 Mrd. in einem Quartal. Ein Chart, der nachdenklich macht.</p>
+      </article>
+
+      <article class="post-item">
+        <div class="post-meta">
+          <span class="tag tag-outline">Quartalszahlen</span>
+          <span class="post-date">14. Februar 2025</span>
+        </div>
+        <h3><a href="#">Berkshire Hathaway Jahresergebnis: Was Buffetts Cashberg wirklich bedeutet</a></h3>
+        <p>$334 Mrd. Cash. Keine großen Zukäufe. Entweder findet Buffett nichts Günstiges — oder er sieht etwas, was wir noch nicht sehen.</p>
+      </article>
+
+    </div>
+  </main>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Watchlist</div>
+      <div class="watchlist-item">
+        <div class="watchlist-name">
+          <span class="watchlist-ticker">NVDA</span>
+          <span class="watchlist-company">NVIDIA Corp.</span>
+        </div>
+        <div class="watchlist-data">
+          <div class="watchlist-price">$867,40</div>
+          <div class="watchlist-pct up">+2,14%</div>
+        </div>
+      </div>
+      <div class="watchlist-item">
+        <div class="watchlist-name">
+          <span class="watchlist-ticker">ASML</span>
+          <span class="watchlist-company">ASML Holding NV</span>
+        </div>
+        <div class="watchlist-data">
+          <div class="watchlist-price">€712,80</div>
+          <div class="watchlist-pct down">−0,87%</div>
+        </div>
+      </div>
+      <div class="watchlist-item">
+        <div class="watchlist-name">
+          <span class="watchlist-ticker">BRK.B</span>
+          <span class="watchlist-company">Berkshire Hathaway</span>
+        </div>
+        <div class="watchlist-data">
+          <div class="watchlist-price">$441,20</div>
+          <div class="watchlist-pct up">+0,44%</div>
+        </div>
+      </div>
+      <div class="watchlist-item">
+        <div class="watchlist-name">
+          <span class="watchlist-ticker">SAP</span>
+          <span class="watchlist-company">SAP SE</span>
+        </div>
+        <div class="watchlist-data">
+          <div class="watchlist-price">€218,50</div>
+          <div class="watchlist-pct up">+1,33%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Earnings Kalender — März</div>
+      <div class="earnings-item">
+        <div class="earnings-date">
+          <span class="earnings-day">06</span>
+          <span class="earnings-month">Mär</span>
+        </div>
+        <div class="earnings-info">
+          <div class="earnings-company">CrowdStrike</div>
+          <div class="earnings-time">Nach Börsenschluss</div>
+        </div>
+        <div class="earnings-est">
+          <span class="est-label">EPS est.</span>
+          $0.84
+        </div>
+      </div>
+      <div class="earnings-item">
+        <div class="earnings-date">
+          <span class="earnings-day">12</span>
+          <span class="earnings-month">Mär</span>
+        </div>
+        <div class="earnings-info">
+          <div class="earnings-company">Adobe</div>
+          <div class="earnings-time">Nach Börsenschluss</div>
+        </div>
+        <div class="earnings-est">
+          <span class="est-label">EPS est.</span>
+          $4.97
+        </div>
+      </div>
+      <div class="earnings-item">
+        <div class="earnings-date">
+          <span class="earnings-day">20</span>
+          <span class="earnings-month">Mär</span>
+        </div>
+        <div class="earnings-info">
+          <div class="earnings-company">Nike</div>
+          <div class="earnings-time">Nach Börsenschluss</div>
+        </div>
+        <div class="earnings-est">
+          <span class="est-label">EPS est.</span>
+          $0.29
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section" id="newsletter">
+      <div class="newsletter-box">
+        <h4>Kein Artikel verpassen.</h4>
+        <p>Neue Ideen, Quartalszahlen und Marktgedanken — direkt ins Postfach. Kein Spam.</p>
+        <input class="newsletter-input" type="email" placeholder="deine@email.de">
+        <button class="newsletter-btn">Anmelden</button>
+      </div>
+    </div>
+
+  </aside>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-left">
+      <a href="#" class="logo">
+        <span class="logo-name">Kapital<span>werk</span></span>
+      </a>
+      <div class="footer-tagline" style="margin-top:0.4rem;">Märkte. Ideen. Perspektiven.</div>
+    </div>
+    <div class="footer-right">
+      © 2025 Kapitalwerk<br>
+      Alle Artikel dienen nur der Information<br>
+      und stellen keine Anlageberatung dar.
+    </div>
+  </div>
+  <div class="footer-disclaimer">
+    <strong>Haftungsausschluss:</strong> Alle Inhalte auf dieser Website dienen ausschließlich zu Informations- und Unterhaltungszwecken. 
+    Nichts davon stellt eine Anlageberatung, Kaufempfehlung oder sonstige Finanzberatung dar. 
+    Investitionen in Wertpapiere sind mit Risiken verbunden. Eigene Recherche ist unerlässlich.
+  </div>
+</footer>
+
+</body>
+</html>
