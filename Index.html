@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kapitalwerk — Märkte. Ideen. Perspektiven.</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --brg: #2C5F2E;
+  --brg-light: #3a7a3d;
+  --brg-pale: #eef4ee;
+  --brg-muted: rgba(44,95,46,0.09);
+  --cream: #FAFAF7;
+  --ink: #181815;
+  --ink-soft: #4a4a44;
+  --ink-muted: #8a8a80;
+  --rule: rgba(44,95,46,0.13);
+  --serif: 'Playfair Display', Georgia, serif;
+  --sans: 'DM Sans', system-ui, sans-serif;
+  --mono: 'DM Mono', monospace;
+  --shadow: 0 4px 24px rgba(0,0,0,0.07);
+  --shadow-lg: 0 16px 56px rgba(0,0,0,0.14);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:16px;scroll-behavior:smooth;}
+body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weight:300;line-height:1.7;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.35;}
+
+/* ── HEADER ── */
+header{position:sticky;top:0;z-index:100;background:rgba(250,250,247,0.94);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--rule);}
+.header-inner{max-width:1240px;margin:0 auto;padding:0 2rem;height:70px;display:flex;align-items:center;justify-content:space-between;gap:2rem;}
+.logo{display:flex;flex-direction:column;gap:1px;text-decoration:none;flex-shrink:0;}
+.logo-name{font-family:var(--serif);font-size:1.45rem;font-weight:600;color:var(--ink);letter-spacing:-.02em;line-height:1;}
+.logo-name span{color:var(--brg);}
+.logo-sub{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-muted);}
+nav{display:flex;align-items:center;gap:2.2rem;}
+nav a{font-size:.76rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);text-decoration:none;font-weight:400;transition:color .2s;position:relative;white-space:nowrap;}
+nav a::after{content:'';position:absolute;bottom:-3px;left:0;width:0;height:1px;background:var(--brg);transition:width .25s;}
+nav a:hover{color:var(--brg);}
+nav a:hover::after{width:100%;}
+.btn-nl{background:var(--brg);color:#fff!important;padding:.42rem 1rem;border-radius:2px;font-size:.72rem!important;transition:background .2s!important;}
+.btn-nl::after{display:none!important;}
+.btn-nl:hover{background:var(--brg-light)!important;}
+/* secret admin trigger — invisible lock icon far right */
+.admin-trigger{background:none;border:none;cursor:pointer;color:var(--ink-muted);font-size:.8rem;opacity:.25;transition:opacity .3s;padding:.3rem;margin-left:.5rem;}
+.admin-trigger:hover{opacity:1;color:var(--brg);}
+
+/* ── PAGES ── */
+.page{display:none;}
+.page.active{display:block;}
+
+/* ── HERO ── */
+.hero{max-width:1240px;margin:0 auto;padding:5rem 2rem 4rem;display:grid;grid-template-columns:1.1fr .9fr;gap:5rem;align-items:end;border-bottom:1px solid var(--rule);}
+.hero h1{font-family:var(--serif);font-size:clamp(2.5rem,4.5vw,4rem);font-weight:500;line-height:1.07;letter-spacing:-.03em;margin-bottom:1.2rem;}
+.hero h1 em{color:var(--brg);font-style:italic;}
+.hero-desc{font-size:.98rem;color:var(--ink-soft);max-width:420px;line-height:1.85;}
+.ticker-label{font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-muted);padding-bottom:.5rem;border-bottom:1px solid var(--rule);margin-bottom:.25rem;display:flex;justify-content:space-between;align-items:center;}
+.ticker-label .live-dot{width:6px;height:6px;border-radius:50%;background:#f0a500;display:inline-block;margin-right:.3rem;animation:pulse 2s infinite;}
+.ticker-label .live-text{font-size:.58rem;color:#f0a500;letter-spacing:.1em;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.ticker-row{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--rule);transition:background .15s;}
+.ticker-name{font-family:var(--mono);font-size:.78rem;color:var(--ink);font-weight:500;}
+.ticker-val{font-family:var(--mono);font-size:.8rem;font-weight:500;}
+.ticker-chg{font-family:var(--mono);font-size:.7rem;padding:.1rem .4rem;border-radius:2px;}
+.up{color:var(--brg);}
+.down{color:#c0392b;}
+.up-bg{background:var(--brg-muted);color:var(--brg);}
+.down-bg{background:rgba(192,57,43,.08);color:#c0392b;}
+.ticker-loading{font-family:var(--mono);font-size:.75rem;color:var(--ink-muted);padding:.5rem 0;text-align:center;}
+
+/* ── MAIN GRID ── */
+.main-grid{max-width:1240px;margin:0 auto;padding:4rem 2rem;display:grid;grid-template-columns:1fr 310px;gap:5rem;}
+.sec-hdr{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:2.5rem;padding-bottom:.9rem;border-bottom:2px solid var(--brg);}
+.sec-title{font-family:var(--serif);font-size:1rem;font-weight:500;letter-spacing:.02em;}
+
+/* ── POSTS ── */
+.post-featured{margin-bottom:3rem;padding-bottom:3rem;border-bottom:1px solid var(--rule);animation:fadeUp .65s ease both;}
+.post-item{padding:1.75rem 0;border-bottom:1px solid var(--rule);animation:fadeUp .65s ease both;}
+.pmeta{display:flex;align-items:center;gap:.8rem;margin-bottom:.85rem;flex-wrap:wrap;}
+.tag{font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;font-weight:500;padding:.2rem .6rem;background:var(--brg);color:#fff;border-radius:2px;}
+.tag-o{background:transparent;color:var(--brg);border:1px solid var(--brg);}
+.pdate{font-size:.72rem;color:var(--ink-muted);}
+.f-badge{font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-muted);margin-left:auto;}
+.post-featured h2{font-family:var(--serif);font-size:clamp(1.5rem,2.8vw,2.1rem);font-weight:500;line-height:1.17;letter-spacing:-.02em;margin-bottom:.85rem;}
+.post-item h3{font-family:var(--serif);font-size:1.22rem;font-weight:500;line-height:1.22;letter-spacing:-.01em;margin-bottom:.5rem;}
+.post-featured h2 a,.post-item h3 a{text-decoration:none;color:inherit;transition:color .2s;cursor:pointer;}
+.post-featured h2 a:hover,.post-item h3 a:hover{color:var(--brg);}
+.pexcerpt{font-size:.95rem;color:var(--ink-soft);line-height:1.8;margin-bottom:1.1rem;}
+.post-item .pexcerpt{font-size:.87rem;}
+.pullquote{border-left:2px solid var(--brg);padding:.45rem 1rem;margin:1.1rem 0;font-family:var(--serif);font-style:italic;font-size:.95rem;color:var(--brg);background:var(--brg-muted);}
+.btn-read{display:inline-flex;align-items:center;gap:.4rem;font-size:.76rem;letter-spacing:.08em;text-transform:uppercase;color:var(--brg);background:none;border:none;cursor:pointer;font-family:var(--sans);font-weight:500;padding:0;transition:gap .2s;}
+.btn-read:hover{gap:.7rem;}
+.empty-state{padding:3rem 0;color:var(--ink-muted);font-size:.9rem;font-style:italic;}
+
+/* ── ARTICLE PAGE ── */
+#page-article{max-width:1240px;margin:0 auto;padding:4rem 2rem;}
+.art-back{display:inline-flex;align-items:center;gap:.4rem;font-size:.76rem;letter-spacing:.08em;text-transform:uppercase;color:var(--brg);background:none;border:none;cursor:pointer;font-family:var(--sans);font-weight:500;margin-bottom:2.5rem;transition:gap .2s;}
+.art-back:hover{gap:.7rem;}
+.art-hdr{max-width:780px;margin-bottom:2.5rem;}
+.art-hdr h1{font-family:var(--serif);font-size:clamp(1.9rem,3.5vw,2.8rem);font-weight:500;line-height:1.1;letter-spacing:-.03em;margin-top:.75rem;}
+.art-body{max-width:760px;font-size:1.04rem;line-height:1.87;color:var(--ink-soft);}
+.art-body p{margin-bottom:1.4rem;}
+.art-body h2{font-family:var(--serif);font-size:1.55rem;font-weight:500;color:var(--ink);margin:2.5rem 0 .9rem;letter-spacing:-.02em;}
+.art-body blockquote{border-left:2px solid var(--brg);padding:.5rem 1.2rem;margin:1.5rem 0;font-family:var(--serif);font-style:italic;font-size:1.02rem;color:var(--brg);background:var(--brg-muted);}
+
+/* ── SIDEBAR ── */
+.sb-sec{margin-bottom:3rem;}
+.sb-title{font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:1.1rem;padding-bottom:.65rem;border-bottom:1px solid var(--rule);}
+.wl-item{display:flex;justify-content:space-between;align-items:center;padding:.65rem 0;border-bottom:1px solid var(--rule);}
+.wl-tick{font-family:var(--mono);font-size:.82rem;font-weight:500;}
+.wl-co{font-size:.67rem;color:var(--ink-muted);}
+.wl-price{font-family:var(--mono);font-size:.82rem;font-weight:500;text-align:right;}
+.wl-pct{font-family:var(--mono);font-size:.69rem;text-align:right;}
+.earn-item{display:flex;align-items:center;gap:.85rem;padding:.65rem 0;border-bottom:1px solid var(--rule);}
+.earn-date{min-width:38px;text-align:center;background:var(--brg-muted);border:1px solid var(--rule);padding:.25rem .3rem;border-radius:3px;}
+.earn-day{display:block;font-family:var(--mono);font-size:.85rem;font-weight:500;color:var(--brg);line-height:1;}
+.earn-mo{display:block;font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);}
+.earn-co{font-size:.82rem;font-weight:500;}
+.earn-time{font-size:.67rem;color:var(--ink-muted);}
+.earn-eps{font-family:var(--mono);font-size:.72rem;color:var(--ink-soft);text-align:right;margin-left:auto;}
+.earn-lbl{font-size:.57rem;color:var(--ink-muted);display:block;}
+.nl-box{background:var(--brg);padding:1.75rem;border-radius:4px;}
+.nl-box h4{font-family:var(--serif);font-size:1.12rem;font-weight:500;color:#fff;margin-bottom:.4rem;}
+.nl-box p{font-size:.82rem;color:rgba(255,255,255,.7);margin-bottom:1.1rem;line-height:1.6;}
+.nl-cta{display:block;width:100%;background:#fff;color:var(--brg);border:none;padding:.72rem;font-family:var(--sans);font-size:.73rem;letter-spacing:.1em;text-transform:uppercase;font-weight:500;cursor:pointer;border-radius:2px;text-align:center;text-decoration:none;transition:opacity .2s;}
+.nl-cta:hover{opacity:.88;}
+
+/* ── LOGIN OVERLAY ── */
+#login-overlay{position:fixed;inset:0;background:rgba(24,24,21,.85);backdrop-filter:blur(8px);z-index:300;display:none;align-items:center;justify-content:center;}
+#login-overlay.open{display:flex;}
+.login-box{background:var(--cream);border:1px solid var(--rule);border-radius:6px;padding:2.5rem;width:100%;max-width:360px;box-shadow:var(--shadow-lg);}
+.login-box h3{font-family:var(--serif);font-size:1.4rem;font-weight:500;margin-bottom:.4rem;}
+.login-box p{font-size:.82rem;color:var(--ink-muted);margin-bottom:1.5rem;}
+.login-box input{width:100%;background:#fff;border:1px solid var(--rule);padding:.72rem .9rem;font-family:var(--sans);font-size:.9rem;color:var(--ink);border-radius:3px;outline:none;transition:border-color .2s;margin-bottom:.75rem;}
+.login-box input:focus{border-color:var(--brg);}
+.login-box input[type=password]{letter-spacing:.15em;}
+.login-err{font-size:.78rem;color:#c0392b;margin-bottom:.75rem;display:none;}
+.login-btns{display:flex;gap:.6rem;}
+.btn-login{flex:1;background:var(--brg);color:#fff;border:none;padding:.72rem;font-family:var(--sans);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;font-weight:500;cursor:pointer;border-radius:3px;transition:background .2s;}
+.btn-login:hover{background:var(--brg-light);}
+.btn-cancel{background:transparent;color:var(--ink-muted);border:1px solid var(--rule);padding:.72rem 1rem;font-family:var(--sans);font-size:.78rem;cursor:pointer;border-radius:3px;transition:all .2s;}
+.btn-cancel:hover{border-color:var(--ink-muted);}
+
+/* ── ADMIN PANEL ── */
+#admin-panel{position:fixed;inset:0;background:rgba(24,24,21,.75);backdrop-filter:blur(6px);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem;}
+#admin-panel.open{display:flex;}
+.admin-modal{background:var(--cream);border:1px solid var(--rule);border-radius:6px;width:100%;max-width:840px;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;}
+.admin-hdr{display:flex;align-items:center;justify-content:space-between;padding:1.4rem 2rem;border-bottom:1px solid var(--rule);position:sticky;top:0;background:var(--cream);z-index:1;flex-shrink:0;}
+.admin-hdr h2{font-family:var(--serif);font-size:1.25rem;font-weight:500;}
+.admin-hdr-right{display:flex;align-items:center;gap:1rem;}
+.admin-logout{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);background:none;border:none;cursor:pointer;font-family:var(--sans);}
+.admin-logout:hover{color:#c0392b;}
+.a-close{background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--ink-muted);line-height:1;}
+.a-close:hover{color:var(--ink);}
+.admin-tabs{display:flex;border-bottom:1px solid var(--rule);padding:0 2rem;flex-shrink:0;}
+.a-tab{padding:.85rem 1.1rem;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border:none;background:none;color:var(--ink-muted);font-family:var(--sans);border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .2s;}
+.a-tab.active{color:var(--brg);border-bottom-color:var(--brg);}
+.admin-body{padding:2rem;overflow-y:auto;}
+.a-sec{display:none;}
+.a-sec.active{display:block;}
+.fg{margin-bottom:1.2rem;}
+.fg label{display:block;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:.4rem;}
+.fg input,.fg textarea,.fg select{width:100%;background:#fff;border:1px solid var(--rule);padding:.68rem .85rem;font-family:var(--sans);font-size:.88rem;color:var(--ink);border-radius:3px;outline:none;transition:border-color .2s;}
+.fg input:focus,.fg textarea:focus,.fg select:focus{border-color:var(--brg);}
+.fg textarea{min-height:130px;resize:vertical;line-height:1.7;}
+.btn-p{background:var(--brg);color:#fff;border:none;padding:.68rem 1.4rem;font-family:var(--sans);font-size:.76rem;letter-spacing:.08em;text-transform:uppercase;font-weight:500;cursor:pointer;border-radius:3px;transition:background .2s;}
+.btn-p:hover{background:var(--brg-light);}
+.btn-d{background:transparent;color:#c0392b;border:1px solid rgba(192,57,43,.28);padding:.48rem .9rem;font-family:var(--sans);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;border-radius:3px;transition:all .2s;}
+.btn-d:hover{background:rgba(192,57,43,.07);}
+.btn-s{background:transparent;color:var(--brg);border:1px solid var(--brg);padding:.48rem .9rem;font-family:var(--sans);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;border-radius:3px;transition:all .2s;margin-right:.4rem;}
+.btn-s:hover{background:var(--brg-muted);}
+.ali{display:flex;align-items:center;justify-content:space-between;padding:.9rem 0;border-bottom:1px solid var(--rule);gap:1rem;}
+.ali-meta{flex:1;min-width:0;}
+.ali-title{font-family:var(--serif);font-size:.95rem;font-weight:500;margin-bottom:.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ali-info{font-size:.72rem;color:var(--ink-muted);}
+.ali-actions{display:flex;gap:.4rem;flex-shrink:0;}
+.wla-item{display:flex;align-items:center;gap:.6rem;padding:.6rem 0;border-bottom:1px solid var(--rule);flex-wrap:wrap;}
+.wla-ticker{font-family:var(--mono);font-size:.83rem;font-weight:500;min-width:58px;}
+.wla-co{font-size:.8rem;color:var(--ink-soft);flex:1;min-width:80px;}
+.sm-input{padding:.28rem .5rem!important;font-family:var(--mono)!important;font-size:.78rem!important;border:1px solid var(--rule)!important;border-radius:2px!important;background:#fff!important;width:auto!important;}
+.add-row{display:grid;grid-template-columns:90px 1fr 95px 80px 70px 36px;gap:.6rem;align-items:end;margin-top:1.1rem;}
+.add-row .fg{margin:0;}
+.ok-msg{background:var(--brg-muted);border:1px solid rgba(44,95,46,.25);color:var(--brg);padding:.5rem .9rem;border-radius:3px;font-size:.8rem;margin-bottom:1rem;display:none;}
+.ft-toggle{display:flex;align-items:center;gap:.55rem;cursor:pointer;}
+.ft-toggle input{width:15px;height:15px;accent-color:var(--brg);cursor:pointer;}
+.ft-toggle span{font-size:.82rem;color:var(--ink-soft);}
+.hint{font-size:.76rem;color:var(--ink-muted);margin-top:.3rem;line-height:1.5;}
+hr.div{border:none;border-top:1px solid var(--rule);margin:1.4rem 0;}
+
+/* ── BLOG PAGE ── */
+#page-blog{max-width:1240px;margin:0 auto;padding:4rem 2rem;}
+.blog-feed{max-width:780px;}
+.blog-article{padding:3rem 0;border-bottom:1px solid var(--rule);animation:fadeUp .6s ease both;}
+.blog-article:first-child{padding-top:0;}
+.blog-article h2{font-family:var(--serif);font-size:clamp(1.6rem,2.8vw,2.2rem);font-weight:500;line-height:1.15;letter-spacing:-.025em;margin-bottom:.9rem;color:var(--ink);}
+.blog-article-body{font-size:1.02rem;line-height:1.87;color:var(--ink-soft);}
+.blog-article-body p{margin-bottom:1.3rem;}
+.blog-article-body h2{font-family:var(--serif);font-size:1.5rem;font-weight:500;color:var(--ink);margin:2.2rem 0 .8rem;letter-spacing:-.02em;}
+.blog-article-body blockquote{border-left:2px solid var(--brg);padding:.5rem 1.2rem;margin:1.4rem 0;font-family:var(--serif);font-style:italic;font-size:1rem;color:var(--brg);background:var(--brg-muted);}
+.blog-divider{display:flex;align-items:center;gap:1rem;margin:1.5rem 0 2rem;}
+.blog-divider::after{content:'';flex:1;height:1px;background:var(--rule);}
+.blog-divider span{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-muted);}
+
+/* ── ABOUT PAGE ── */
+#page-about{max-width:1240px;margin:0 auto;padding:5rem 2rem;}
+.about-inner{max-width:680px;}
+.about-eyebrow{font-size:.65rem;letter-spacing:.22em;text-transform:uppercase;color:var(--brg);margin-bottom:1.2rem;font-weight:500;}
+.about-inner h1{font-family:var(--serif);font-size:clamp(2.2rem,4vw,3.2rem);font-weight:500;line-height:1.1;letter-spacing:-.03em;margin-bottom:2rem;}
+.about-inner h1 em{color:var(--brg);font-style:italic;}
+.about-body{font-size:1.05rem;line-height:1.9;color:var(--ink-soft);}
+.about-body p{margin-bottom:1.6rem;}
+.about-body p:last-child{margin-bottom:0;}
+.about-signature{margin-top:3rem;padding-top:2rem;border-top:1px solid var(--rule);display:flex;align-items:center;gap:1.5rem;}
+.about-sig-name{font-family:var(--serif);font-size:1.3rem;font-weight:500;color:var(--ink);}
+.about-sig-title{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);}
+.about-disclaimer{margin-top:3rem;padding:1.5rem;border:1px solid var(--rule);border-left:3px solid var(--brg);background:var(--brg-muted);}
+.about-disclaimer p{font-size:.82rem;color:var(--ink-muted);line-height:1.7;margin:0;}
+.about-disclaimer strong{color:var(--brg);}
+
+/* ── FOOTER ── */
+footer{border-top:1px solid var(--rule);margin-top:2rem;}
+.ft-inner{max-width:1240px;margin:0 auto;padding:2.4rem 2rem;display:flex;justify-content:space-between;align-items:center;}
+.ft-r{font-size:.71rem;color:var(--ink-muted);text-align:right;line-height:1.8;}
+.ft-disc{font-size:.67rem;color:var(--ink-muted);max-width:1240px;margin:0 auto;padding:0 2rem 2rem;border-top:1px solid var(--rule);padding-top:1.2rem;line-height:1.6;}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:960px){
+  .hero{grid-template-columns:1fr;gap:2.5rem;padding:3rem 1.5rem 2.5rem;}
+  .main-grid{grid-template-columns:1fr;gap:3rem;padding:2.5rem 1.5rem;}
+  .ft-inner{flex-direction:column;gap:1rem;text-align:center;}
+  .ft-r{text-align:center;}
+  nav{gap:1.2rem;}
+  .btn-nl{display:none;}
+}
+@media(max-width:640px){
+  .header-inner{padding:0 1rem;}
+  nav{gap:.8rem;}
+  nav a{font-size:.7rem;}
+  #page-article{padding:2.5rem 1.25rem;}
+  .add-row{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <a href="#" class="logo" onclick="showPage('home');return false;">
+      <span class="logo-name">Kapital<span>werk</span></span>
+      <span class="logo-sub">Märkte · Ideen · Perspektiven</span>
+    </a>
+    <nav>
+      <a href="#" onclick="showPage('blog');return false;">Artikel</a>
+      <a href="#" onclick="showPage('about');return false;">Über mich</a>
+      <a href="https://raphaels-newsletter-0e69d6.beehiiv.com/" target="_blank" class="btn-nl">Newsletter</a>
+    </nav>
+    <!-- Secret admin trigger — small lock, barely visible -->
+    <button class="admin-trigger" onclick="promptLogin()" title="Admin">&#9679;&#9679;&#9679;</button>
+  </div>
+</header>
+
+<!-- ═══════════ HOME PAGE ═══════════ -->
+<div id="page-home" class="page active">
+
+  <section class="hero">
+    <div>
+      <h1>Märkte lesen.<br><em>Klüger</em> investieren.</h1>
+      <p class="hero-desc">Quartalszahlen, Aktienideen und Marktgedanken — kein Rauschen, keine heißen Tipps. Nur was wirklich interessant ist.</p>
+    </div>
+    <div>
+      <div class="ticker-label">
+        <span>Marktüberblick</span>
+        <span><span class="live-dot"></span><span class="live-text">15 MIN VERZÖGERT</span></span>
+      </div>
+      <div id="ticker-display"><div class="ticker-loading">Kurse werden geladen…</div></div>
+    </div>
+  </section>
+
+  <div class="main-grid">
+    <main>
+      <div class="sec-hdr"><span class="sec-title">Neueste Artikel</span></div>
+      <div id="post-feed"></div>
+    </main>
+
+    <aside>
+      <div class="sb-sec" id="watchlist-anchor">
+        <div class="sb-title">Watchlist</div>
+        <div id="watchlist-display"><div class="ticker-loading">Kurse werden geladen…</div></div>
+      </div>
+
+      <div class="sb-sec">
+        <div class="sb-title">Earnings Kalender</div>
+        <div class="earn-item">
+          <div class="earn-date"><span class="earn-day">06</span><span class="earn-mo">Mär</span></div>
+          <div><div class="earn-co">CrowdStrike</div><div class="earn-time">Nach Börsenschluss</div></div>
+          <div class="earn-eps"><span class="earn-lbl">EPS est.</span>$0.84</div>
+        </div>
+        <div class="earn-item">
+          <div class="earn-date"><span class="earn-day">12</span><span class="earn-mo">Mär</span></div>
+          <div><div class="earn-co">Adobe</div><div class="earn-time">Nach Börsenschluss</div></div>
+          <div class="earn-eps"><span class="earn-lbl">EPS est.</span>$4.97</div>
+        </div>
+        <div class="earn-item">
+          <div class="earn-date"><span class="earn-day">20</span><span class="earn-mo">Mär</span></div>
+          <div><div class="earn-co">Nike</div><div class="earn-time">Nach Börsenschluss</div></div>
+          <div class="earn-eps"><span class="earn-lbl">EPS est.</span>$0.29</div>
+        </div>
+      </div>
+
+      <div class="sb-sec">
+        <div class="nl-box">
+          <h4>Kein Artikel verpassen.</h4>
+          <p>Ideen, Quartalszahlen und Marktgedanken direkt ins Postfach.</p>
+          <a href="https://raphaels-newsletter-0e69d6.beehiiv.com/" target="_blank" class="nl-cta">Jetzt anmelden →</a>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- ═══════════ BLOG PAGE ═══════════ -->
+<div id="page-blog" class="page">
+  <div class="blog-feed" id="blog-feed"></div>
+</div>
+
+<!-- ═══════════ ABOUT PAGE ═══════════ -->
+<div id="page-about" class="page">
+  <div class="about-inner">
+    <div class="about-eyebrow">Über den Autor</div>
+    <h1>Ich bin Raphael —<br>und Märkte sind <em>meine Passion.</em></h1>
+    <div class="about-body">
+      <p>Seit Jahren begleitet mich die Börse nicht als Beruf, sondern als echte Leidenschaft. Was als Neugier begann, ist heute ein tägliches Ritual geworden: Märkte beobachten, Zahlen hinterfragen, Zusammenhänge verstehen. Nicht aus Pflicht — sondern weil es mich aufrichtig fasziniert.</p>
+      <p>Meine Entscheidungen basieren auf dem Zusammenspiel zweier Welten: der <strong>fundamentalen Analyse</strong>, die mir sagt, was ein Unternehmen wert ist, und der <strong>technischen Analyse</strong>, die mir zeigt, wann der Markt bereit ist, das anzuerkennen. Beide allein reichen mir nicht — erst gemeinsam ergeben sie ein vollständiges Bild.</p>
+      <p>Kapitalwerk ist der Ort, an dem ich meine Gedanken teile. Aktienideen, die mich beschäftigen. Quartalszahlen, die ich für relevant halte. Marktbewegungen, die ich anders lese als den Konsens. Kein Lärm, keine heißen Tipps — nur ehrliche Perspektiven eines Menschen, der sich täglich mit diesen Fragen auseinandersetzt.</p>
+      <p>Ich habe mir immer gewünscht, eine solche Quelle zu haben: jemanden, der unabhängig denkt, transparent teilt und keine versteckten Interessen verfolgt. Kapitalwerk ist mein Versuch, genau das zu sein.</p>
+    </div>
+    <div class="about-signature">
+      <div>
+        <div class="about-sig-name">Raphael Bücker</div>
+        <div class="about-sig-title">Gründer · Kapitalwerk</div>
+      </div>
+    </div>
+    <div class="about-disclaimer">
+      <p><strong>Wichtiger Hinweis:</strong> Alle Inhalte auf Kapitalwerk sind ausschließlich meine persönlichen Gedanken und Meinungen. Sie stellen keine Anlageberatung, keine Kaufempfehlung und keine Aufforderung zum Handeln dar. Jeder ist für seine eigenen Finanzentscheidungen selbst verantwortlich. Bitte nutze Kapitalwerk als das, was es ist — eine Informationsquelle und Denkanstoß, nicht mehr.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ARTICLE PAGE ═══════════ -->
+<div id="page-article" class="page">
+  <div id="page-article-inner" style="max-width:1240px;margin:0 auto;padding:4rem 2rem;">
+    <button class="art-back" onclick="showPage('blog')">← Zurück zu den Artikeln</button>
+    <div class="art-hdr">
+      <div class="pmeta" id="art-meta"></div>
+      <h1 id="art-title"></h1>
+    </div>
+    <div class="art-body" id="art-body"></div>
+  </div>
+</div>
+
+<!-- ═══════════ LOGIN OVERLAY ═══════════ -->
+<div id="login-overlay">
+  <div class="login-box">
+    <h3>Admin-Zugang</h3>
+    <p>Bitte Passwort eingeben um fortzufahren.</p>
+    <input type="password" id="pw-input" placeholder="Passwort" onkeydown="if(event.key==='Enter')checkLogin()">
+    <div class="login-err" id="login-err">Falsches Passwort.</div>
+    <div class="login-btns">
+      <button class="btn-login" onclick="checkLogin()">Einloggen</button>
+      <button class="btn-cancel" onclick="closeLogin()">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ADMIN PANEL ═══════════ -->
+<div id="admin-panel">
+  <div class="admin-modal">
+    <div class="admin-hdr">
+      <h2>Kapitalwerk Admin</h2>
+      <div class="admin-hdr-right">
+        <button class="admin-logout" onclick="logout()">Ausloggen</button>
+        <button class="a-close" onclick="closeAdmin()">✕</button>
+      </div>
+    </div>
+    <div class="admin-tabs">
+      <button class="a-tab active" onclick="switchTab('articles',this)">Artikel</button>
+      <button class="a-tab" onclick="switchTab('new-article',this)">Neuer Artikel</button>
+      <button class="a-tab" onclick="switchTab('watchlist',this)">Watchlist</button>
+      <button class="a-tab" onclick="switchTab('earnings',this)">Earnings</button>
+    </div>
+    <div class="admin-body">
+
+      <!-- ARTICLES LIST -->
+      <div class="a-sec active" id="tab-articles">
+        <div id="admin-articles-list"></div>
+      </div>
+
+      <!-- NEW / EDIT ARTICLE -->
+      <div class="a-sec" id="tab-new-article">
+        <div class="ok-msg" id="art-ok">✓ Artikel gespeichert</div>
+        <input type="hidden" id="edit-id">
+        <div class="fg"><label>Titel</label><input type="text" id="a-title" placeholder="z.B. NVIDIA Q4: Die Zahlen hinter dem Hype"></div>
+        <div class="fg"><label>Kategorie</label>
+          <select id="a-cat">
+            <option>Quartalszahlen</option><option>Aktienidee</option>
+            <option>Marktgedanke</option><option>Chart</option><option>Makro</option>
+          </select>
+        </div>
+        <div class="fg"><label>Vorschautext (2–3 Sätze)</label><textarea id="a-excerpt" style="min-height:80px;" placeholder="Kurze Zusammenfassung die neugierig macht..."></textarea></div>
+        <div class="fg">
+          <label>Artikeltext</label>
+          <textarea id="a-content" placeholder="Schreibe hier deinen vollständigen Artikel.&#10;&#10;## So machst du eine Zwischenüberschrift&#10;> So machst du ein Zitat&#10;&#10;Einfach leer Zeile lassen für neuen Absatz."></textarea>
+          <p class="hint">Formatierung: <strong>## Text</strong> = Überschrift &nbsp;|&nbsp; <strong>&gt; Text</strong> = Zitat-Block &nbsp;|&nbsp; Leerzeile = neuer Absatz</p>
+        </div>
+        <div class="fg">
+          <label class="ft-toggle">
+            <input type="checkbox" id="a-featured">
+            <span>Als Hauptartikel oben anzeigen (ersetzt bisherigen Hauptartikel)</span>
+          </label>
+        </div>
+        <div style="display:flex;gap:.7rem;margin-top:.5rem;">
+          <button class="btn-p" onclick="saveArticle()">Artikel speichern</button>
+          <button class="btn-s" onclick="resetArticleForm()">Neuen Artikel</button>
+        </div>
+      </div>
+
+      <!-- WATCHLIST ADMIN -->
+      <div class="a-sec" id="tab-watchlist">
+        <div class="ok-msg" id="wl-ok">✓ Watchlist gespeichert</div>
+        <p class="hint" style="margin-bottom:1rem;">Symbole werden automatisch über Yahoo Finance abgerufen. Trage den Ticker-Symbol ein (z.B. AAPL, NVDA, SAP.DE, BRK-B).</p>
+        <div id="wla-list"></div>
+        <hr class="div">
+        <p style="font-size:.8rem;color:var(--ink-muted);margin-bottom:.8rem;">Neue Aktie hinzufügen:</p>
+        <div class="add-row">
+          <div class="fg"><label>Ticker</label><input type="text" id="new-tick" placeholder="AAPL" style="text-transform:uppercase;"></div>
+          <div class="fg"><label>Anzeigename</label><input type="text" id="new-co" placeholder="Apple Inc."></div>
+          <div class="fg" style="grid-column:span 2;"><label>&nbsp;</label>
+            <button class="btn-p" onclick="addWatchlistItem()" style="width:100%;margin-top:0;">Hinzufügen</button>
+          </div>
+        </div>
+        <br>
+        <button class="btn-p" onclick="saveWatchlist()">Watchlist speichern & Kurse laden</button>
+      </div>
+
+      <!-- EARNINGS -->
+      <div class="a-sec" id="tab-earnings">
+        <div class="ok-msg" id="earn-ok">✓ Earnings gespeichert</div>
+        <div id="earn-admin-list"></div>
+        <hr class="div">
+        <p style="font-size:.8rem;color:var(--ink-muted);margin-bottom:.8rem;">Neuer Eintrag:</p>
+        <div style="display:grid;grid-template-columns:60px 60px 1fr 1fr 80px;gap:.6rem;align-items:end;">
+          <div class="fg"><label>Tag</label><input type="text" id="ne-day" placeholder="06"></div>
+          <div class="fg"><label>Monat</label><input type="text" id="ne-mo" placeholder="Mär"></div>
+          <div class="fg"><label>Unternehmen</label><input type="text" id="ne-co" placeholder="Apple"></div>
+          <div class="fg"><label>Zeitpunkt</label><input type="text" id="ne-time" placeholder="Nach Börsenschluss"></div>
+          <div class="fg"><label>EPS est.</label><input type="text" id="ne-eps" placeholder="$1.20"></div>
+        </div>
+        <button class="btn-p" onclick="addEarnings()" style="margin-bottom:1rem;">Hinzufügen</button>
+        <br><br>
+        <button class="btn-p" onclick="saveEarnings()">Earnings speichern</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="ft-inner">
+    <div>
+      <div style="font-family:var(--serif);font-size:1.05rem;font-weight:600;letter-spacing:-.02em;">Kapital<span style="color:var(--brg);">werk</span></div>
+      <div style="font-size:.76rem;color:var(--ink-muted);margin-top:.25rem;">Märkte. Ideen. Perspektiven.</div>
+    </div>
+    <div class="ft-r">© 2025 Kapitalwerk<br>Keine Anlageberatung. Kurse 15 Min. verzögert.</div>
+  </div>
+  <div class="ft-disc"><strong>Haftungsausschluss:</strong> Alle Inhalte dienen ausschließlich zu Informationszwecken und stellen keine Anlageberatung dar. Investitionen in Wertpapiere sind mit Risiken verbunden. Kursdaten werden mit 15 Minuten Verzögerung angezeigt.</div>
+</footer>
+
+<script>
+// ════════════════════════════════════════
+//  CONFIG — ÄNDERE NUR HIER
+// ════════════════════════════════════════
+const ADMIN_PASSWORD = 'Molly1997';
+
+// ════════════════════════════════════════
+//  STORAGE
+// ════════════════════════════════════════
+const SK = { articles:'kw2_articles', watchlist:'kw2_watchlist', earnings:'kw2_earnings', session:'kw2_session' };
+
+function load(k){ try{ const d=localStorage.getItem(k); return d?JSON.parse(d):null; }catch(e){ return null; } }
+function persist(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){ console.warn('Storage error',e); } }
+
+// ════════════════════════════════════════
+//  DEFAULT DATA
+// ════════════════════════════════════════
+const DEF_ARTICLES = [
+  { id:1, title:'NVIDIA Q4 2024: Die Zahlen hinter dem Hype — und was sie wirklich bedeuten',
+    category:'Quartalszahlen', date:'3. März 2025', featured:true,
+    excerpt:'$39,3 Mrd. Umsatz. +78% YoY. Die Headline ist bekannt. Aber wer zwischen den Zeilen liest, findet ein interessantes Bild: erste Zeichen einer Normalisierung in den Margen.',
+    content:'## Die Zahlen im Überblick\n\nNVIDIA hat wieder geliefert. $39,3 Mrd. Umsatz im vierten Quartal, ein Wachstum von 78% gegenüber dem Vorjahr. Die Datacenter-Sparte macht inzwischen über 91% des Gesamtumsatzes aus.\n\n## Was hinter den Zahlen steckt\n\n> Der Markt bewertet nicht die Gegenwart — er kauft eine Erwartung über die nächsten 12 Monate.\n\nInteressant ist der Blick auf die Gross Margin. Mit 73,5% liegt sie leicht unter dem Rekordhoch. Die Blackwell-Architektur läuft noch nicht auf vollen Touren.\n\n## Was das für Investoren bedeutet\n\nNVIDIA wird weiterhin von zwei Tailwinds getragen: Der KI-Infrastruktur-Boom und der Übergang von CPU- zu GPU-Computing. Solange die großen Hyperscaler ihre CapEx-Pläne nicht kürzen, bleibt NVIDIA der klare Hauptprofiteur.' },
+  { id:2, title:'Warum ich ASML für eine der interessantesten europäischen Positionen halte',
+    category:'Aktienidee', date:'28. Februar 2025', featured:false,
+    excerpt:'Das Monopol auf EUV-Lithografie ist real. Die Frage ist nicht ob, sondern wann der nächste Chip-Zyklus dreht.',
+    content:'## Ein echtes Monopol\n\nEs gibt wenige Unternehmen auf der Welt, die ein echtes technologisches Monopol besitzen. ASML ist eines davon.\n\n> Eine EUV-Maschine kostet über 150 Millionen Euro. Und die Kunden stehen Schlange.\n\n## Risiken nicht vergessen\n\nChina-Exposure ist das größte Risiko. Die Exportbeschränkungen treffen ASML empfindlich. Dennoch: Wer langfristig denkt, kauft ASML bei Schwäche.' },
+  { id:3, title:'Was der Bond-Markt gerade wirklich signalisiert',
+    category:'Marktgedanke', date:'24. Februar 2025', featured:false,
+    excerpt:'Während alle auf Powell schauen, erzählt die Zinskurve eine andere Geschichte.',
+    content:'## Was die Zinskurve sagt\n\nDie Zinskurve ist seit über zwei Jahren invertiert. Normalerweise ein verlässliches Rezessionssignal — doch die Wirtschaft läuft weiter.\n\n> Der Anleihemarkt hat bisher immer recht behalten. Er braucht manchmal nur mehr Geduld.\n\n## Meine Einschätzung\n\nDie Fed ist in einer Zwickmühle. Zu früh senken riskiert eine Inflation-Rückkehr, zu spät senken würgt die Wirtschaft ab.' }
+];
+
+const DEF_WATCHLIST = [
+  { ticker:'NVDA', company:'NVIDIA Corp.' },
+  { ticker:'ASML', company:'ASML Holding' },
+  { ticker:'BRK-B', company:'Berkshire Hathaway' },
+  { ticker:'SAP', company:'SAP SE' }
+];
+
+const DEF_EARNINGS = [
+  { day:'06', month:'Mär', company:'CrowdStrike', time:'Nach Börsenschluss', eps:'$0.84' },
+  { day:'12', month:'Mär', company:'Adobe', time:'Nach Börsenschluss', eps:'$4.97' },
+  { day:'20', month:'Mär', company:'Nike', time:'Nach Börsenschluss', eps:'$0.29' }
+];
+
+// ════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════
+let articles  = load(SK.articles)  || DEF_ARTICLES;
+let watchlist = load(SK.watchlist) || DEF_WATCHLIST;
+let earnings  = load(SK.earnings)  || DEF_EARNINGS;
+let isAdmin   = sessionStorage.getItem(SK.session) === 'yes';
+
+// ════════════════════════════════════════
+//  YAHOO FINANCE PROXY
+// ════════════════════════════════════════
+async function fetchQuotes(symbols) {
+  if (!symbols.length) return {};
+  const sym = symbols.join(',');
+  const url = `https://query1.finance.yahoo.com/v8/finance/spark?symbols=${encodeURIComponent(sym)}&range=1d&interval=5m`;
+  // We use the summary endpoint for price data
+  const url2 = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(sym)}&fields=regularMarketPrice,regularMarketChange,regularMarketChangePercent,shortName,regularMarketPreviousClose`;
+  try {
+    const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url2)}`);
+    if (!res.ok) throw new Error('fetch failed');
+    const data = await res.json();
+    const results = {};
+    (data?.quoteResponse?.result || []).forEach(q => {
+      results[q.symbol] = {
+        price: q.regularMarketPrice,
+        change: q.regularMarketChange,
+        changePct: q.regularMarketChangePercent,
+        name: q.shortName || q.symbol
+      };
+    });
+    return results;
+  } catch(e) {
+    console.warn('Quote fetch failed:', e);
+    return {};
+  }
+}
+
+function fmtPrice(p, sym) {
+  if (p === undefined || p === null) return '—';
+  // EUR stocks
+  const isEur = sym && (sym.endsWith('.DE') || sym.endsWith('.AS') || sym.endsWith('.PA'));
+  const formatted = p < 10 ? p.toFixed(4) : p < 1000 ? p.toFixed(2) : p.toFixed(0);
+  return (isEur ? '€' : '$') + parseFloat(formatted).toLocaleString('de-DE', {minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+function fmtPct(pct) {
+  if (pct === undefined || pct === null) return '—';
+  const sign = pct >= 0 ? '+' : '';
+  return sign + pct.toFixed(2) + '%';
+}
+
+// Hero ticker symbols (fixed set for market overview)
+const HERO_SYMBOLS = [
+  { sym: '^GSPC', label: 'S&P 500' },
+  { sym: '^GDAXI', label: 'DAX' },
+  { sym: '^IXIC', label: 'NASDAQ' },
+  { sym: 'EURUSD=X', label: 'EUR/USD' },
+  { sym: 'GC=F', label: 'Gold' }
+];
+
+async function loadHeroTicker() {
+  const el = document.getElementById('ticker-display');
+  const syms = HERO_SYMBOLS.map(h=>h.sym);
+  const quotes = await fetchQuotes(syms);
+  if (!Object.keys(quotes).length) {
+    // Fallback static data
+    el.innerHTML = [
+      {label:'S&P 500',val:'5.862',chg:'+0,84%',d:'up'},
+      {label:'DAX',val:'22.141',chg:'+1,12%',d:'up'},
+      {label:'NASDAQ',val:'18.544',chg:'−0,38%',d:'down'},
+      {label:'EUR/USD',val:'1,0821',chg:'+0,21%',d:'up'},
+      {label:'Gold',val:'2.911',chg:'+0,55%',d:'up'}
+    ].map(t=>`<div class="ticker-row">
+      <span class="ticker-name">${t.label}</span>
+      <span class="ticker-val">${t.val}</span>
+      <span class="ticker-chg ${t.d}-bg">${t.chg}</span>
+    </div>`).join('');
+    return;
+  }
+  el.innerHTML = HERO_SYMBOLS.map(h => {
+    const q = quotes[h.sym];
+    if (!q) return '';
+    const dir = q.changePct >= 0 ? 'up' : 'down';
+    return `<div class="ticker-row">
+      <span class="ticker-name">${h.label}</span>
+      <span class="ticker-val">${fmtPrice(q.price, h.sym)}</span>
+      <span class="ticker-chg ${dir}-bg">${fmtPct(q.changePct)}</span>
+    </div>`;
+  }).join('');
+}
+
+async function loadWatchlistQuotes() {
+  const el = document.getElementById('watchlist-display');
+  if (!watchlist.length) { el.innerHTML = '<p style="font-size:.82rem;color:var(--ink-muted);">Keine Aktien in der Watchlist.</p>'; return; }
+  const syms = watchlist.map(w=>w.ticker);
+  const quotes = await fetchQuotes(syms);
+  el.innerHTML = watchlist.map(w => {
+    const q = quotes[w.ticker];
+    const dir = q ? (q.changePct >= 0 ? 'up' : 'down') : 'up';
+    const price = q ? fmtPrice(q.price, w.ticker) : '—';
+    const pct = q ? fmtPct(q.changePct) : '—';
+    return `<div class="wl-item">
+      <div><div class="wl-tick">${w.ticker}</div><div class="wl-co">${w.company}</div></div>
+      <div><div class="wl-price">${price}</div><div class="wl-pct ${dir}">${pct}</div></div>
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════
+//  RENDER FEED
+// ════════════════════════════════════════
+function renderFeed() {
+  const el = document.getElementById('post-feed');
+  if (!articles.length) { el.innerHTML = '<p class="empty-state">Noch keine Artikel vorhanden.</p>'; return; }
+  const featured = articles.find(a=>a.featured);
+  const rest = articles.filter(a=>!a.featured);
+  let html = '';
+  if (featured) {
+    html += `<article class="post-featured">
+      <div class="pmeta">
+        <span class="tag">${featured.category}</span>
+        <span class="pdate">${featured.date}</span>
+        <span class="f-badge">⬡ Leitartikel</span>
+      </div>
+      <h2><a onclick="openArticle(${featured.id});return false;" href="#">${featured.title}</a></h2>
+      <p class="pexcerpt">${featured.excerpt}</p>
+      <button class="btn-read" onclick="openArticle(${featured.id})">Weiterlesen →</button>
+    </article>`;
+  }
+  if (rest.length) {
+    html += rest.map((a,i)=>`
+      <article class="post-item" style="animation-delay:${.1+i*.07}s">
+        <div class="pmeta">
+          <span class="tag tag-o">${a.category}</span>
+          <span class="pdate">${a.date}</span>
+        </div>
+        <h3><a onclick="openArticle(${a.id});return false;" href="#">${a.title}</a></h3>
+        <p class="pexcerpt">${a.excerpt}</p>
+        <button class="btn-read" onclick="openArticle(${a.id})" style="margin-top:.4rem;">Weiterlesen →</button>
+      </article>`).join('');
+  }
+  el.innerHTML = html;
+}
+
+function renderEarnings() {
+  const cont = document.querySelector('.sb-sec:nth-child(2)');
+  if (!cont) return;
+  const listEl = cont.querySelector('#earn-display');
+  if (!listEl) return;
+  listEl.innerHTML = earnings.map(e=>`
+    <div class="earn-item">
+      <div class="earn-date"><span class="earn-day">${e.day}</span><span class="earn-mo">${e.month}</span></div>
+      <div><div class="earn-co">${e.company}</div><div class="earn-time">${e.time}</div></div>
+      <div class="earn-eps"><span class="earn-lbl">EPS est.</span>${e.eps}</div>
+    </div>`).join('');
+}
+
+
+// ════════════════════════════════════════
+//  BLOG PAGE
+// ════════════════════════════════════════
+function renderBlog() {
+  const el = document.getElementById('blog-feed');
+  if (!el) return;
+  if (!articles.length) { el.innerHTML = '<p style="padding:3rem 0;color:var(--ink-muted);font-style:italic;">Noch keine Artikel vorhanden.</p>'; return; }
+  const sorted = [...articles].sort((a,b) => b.id - a.id);
+  el.innerHTML = sorted.map((a,i) => `
+    <article class="blog-article" style="animation-delay:${i*0.07}s">
+      <div class="pmeta">
+        <span class="tag">${a.category}</span>
+        <span class="pdate">${a.date}</span>
+        ${a.featured ? '<span class="f-badge">⬡ Leitartikel</span>' : ''}
+      </div>
+      <h2>${a.title}</h2>
+      <div class="blog-divider"><span>Lektüre</span></div>
+      <div class="blog-article-body">${parseContent(a.content || a.excerpt)}</div>
+    </article>`).join('');
+}
+
+// ════════════════════════════════════════
+//  ARTICLE VIEW
+// ════════════════════════════════════════
+function openArticle(id) {
+  const a = articles.find(x=>x.id===id);
+  if (!a) return;
+  document.getElementById('art-title').textContent = a.title;
+  document.getElementById('art-meta').innerHTML = `<span class="tag">${a.category}</span><span class="pdate">${a.date}</span>`;
+  document.getElementById('art-body').innerHTML = parseContent(a.content);
+  showPage('article');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function parseContent(text) {
+  if (!text) return '';
+  return text.split('\n').map(line=>{
+    if (line.startsWith('## ')) return `<h2>${line.slice(3)}</h2>`;
+    if (line.startsWith('> '))  return `<blockquote>${line.slice(2)}</blockquote>`;
+    if (line.trim() === '')     return '';
+    return `<p>${line}</p>`;
+  }).filter(Boolean).join('');
+}
+
+// ════════════════════════════════════════
+//  PAGE NAV
+// ════════════════════════════════════════
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const pg = document.getElementById('page-'+name);
+  if (pg) pg.classList.add('active');
+  if (name === 'blog') renderBlog();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ════════════════════════════════════════
+//  LOGIN / AUTH
+// ════════════════════════════════════════
+function promptLogin() {
+  if (isAdmin) { openAdmin(); return; }
+  document.getElementById('login-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('pw-input').focus(), 100);
+}
+
+function closeLogin() {
+  document.getElementById('login-overlay').classList.remove('open');
+  document.getElementById('pw-input').value = '';
+  document.getElementById('login-err').style.display = 'none';
+}
+
+function checkLogin() {
+  const pw = document.getElementById('pw-input').value;
+  if (pw === ADMIN_PASSWORD) {
+    isAdmin = true;
+    sessionStorage.setItem(SK.session, 'yes');
+    closeLogin();
+    openAdmin();
+  } else {
+    const err = document.getElementById('login-err');
+    err.style.display = 'block';
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+    setTimeout(()=>err.style.display='none', 2500);
+  }
+}
+
+function logout() {
+  isAdmin = false;
+  sessionStorage.removeItem(SK.session);
+  closeAdmin();
+}
+
+// ════════════════════════════════════════
+//  ADMIN PANEL
+// ════════════════════════════════════════
+function openAdmin() {
+  if (!isAdmin) { promptLogin(); return; }
+  document.getElementById('admin-panel').classList.add('open');
+  renderAdminArticles();
+  renderAdminWatchlist();
+  renderAdminEarnings();
+}
+
+function closeAdmin() { document.getElementById('admin-panel').classList.remove('open'); }
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.a-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.a-sec').forEach(s=>s.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const sec = document.getElementById('tab-'+name);
+  if (sec) sec.classList.add('active');
+}
+
+// ── ARTICLES ADMIN ──
+function renderAdminArticles() {
+  const el = document.getElementById('admin-articles-list');
+  if (!articles.length) { el.innerHTML='<p style="color:var(--ink-muted);font-size:.85rem;padding:1rem 0;">Noch keine Artikel.</p>'; return; }
+  el.innerHTML = articles.map(a=>`
+    <div class="ali">
+      <div class="ali-meta">
+        <div class="ali-title">${a.title}</div>
+        <div class="ali-info">${a.category} · ${a.date}${a.featured?' · ⬡ Leitartikel':''}</div>
+      </div>
+      <div class="ali-actions">
+        <button class="btn-s" onclick="editArticle(${a.id})">Bearbeiten</button>
+        <button class="btn-d" onclick="deleteArticle(${a.id})">Löschen</button>
+      </div>
+    </div>`).join('');
+}
+
+function editArticle(id) {
+  const a = articles.find(x=>x.id===id);
+  if (!a) return;
+  document.getElementById('edit-id').value = a.id;
+  document.getElementById('a-title').value = a.title;
+  document.getElementById('a-cat').value = a.category;
+  document.getElementById('a-excerpt').value = a.excerpt;
+  document.getElementById('a-content').value = a.content;
+  document.getElementById('a-featured').checked = a.featured;
+  // Go to edit tab
+  document.querySelectorAll('.a-tab').forEach((t,i)=>t.classList.toggle('active',i===1));
+  document.querySelectorAll('.a-sec').forEach((s,i)=>s.classList.toggle('active',i===1));
+}
+
+function deleteArticle(id) {
+  if (!confirm('Artikel wirklich löschen?')) return;
+  articles = articles.filter(a=>a.id!==id);
+  persist(SK.articles, articles);
+  renderAdminArticles();
+  renderFeed();
+  renderBlog();
+}
+
+function saveArticle() {
+  const id = parseInt(document.getElementById('edit-id').value)||0;
+  const isFeatured = document.getElementById('a-featured').checked;
+  if (isFeatured) articles.forEach(a=>a.featured=false);
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('de-DE',{day:'numeric',month:'long',year:'numeric'});
+  const a = {
+    id: id || Date.now(),
+    title: document.getElementById('a-title').value.trim() || 'Ohne Titel',
+    category: document.getElementById('a-cat').value,
+    date: dateStr,
+    featured: isFeatured,
+    excerpt: document.getElementById('a-excerpt').value.trim(),
+    content: document.getElementById('a-content').value.trim()
+  };
+  if (id) {
+    const idx = articles.findIndex(x=>x.id===id);
+    if (idx > -1) articles[idx] = a; else articles.unshift(a);
+  } else {
+    articles.unshift(a);
+  }
+  persist(SK.articles, articles);
+  renderFeed();
+  renderBlog();
+  renderAdminArticles();
+  showOk('art-ok');
+  resetArticleForm();
+}
+
+function resetArticleForm() {
+  document.getElementById('edit-id').value='';
+  document.getElementById('a-title').value='';
+  document.getElementById('a-excerpt').value='';
+  document.getElementById('a-content').value='';
+  document.getElementById('a-featured').checked=false;
+  document.getElementById('a-cat').value='Quartalszahlen';
+}
+
+// ── WATCHLIST ADMIN ──
+function renderAdminWatchlist() {
+  const el = document.getElementById('wla-list');
+  el.innerHTML = watchlist.map((w,i)=>`
+    <div class="wla-item">
+      <span class="wla-ticker">${w.ticker}</span>
+      <span class="wla-co">${w.company}</span>
+      <button class="btn-d" onclick="removeWatchlistItem(${i})" style="padding:.25rem .6rem;">✕</button>
+    </div>`).join('');
+}
+
+function addWatchlistItem() {
+  const t = document.getElementById('new-tick').value.trim().toUpperCase();
+  const c = document.getElementById('new-co').value.trim();
+  if (!t) return;
+  watchlist.push({ ticker:t, company:c||t });
+  document.getElementById('new-tick').value='';
+  document.getElementById('new-co').value='';
+  renderAdminWatchlist();
+}
+
+function removeWatchlistItem(i) { watchlist.splice(i,1); renderAdminWatchlist(); }
+
+function saveWatchlist() {
+  persist(SK.watchlist, watchlist);
+  loadWatchlistQuotes();
+  showOk('wl-ok');
+}
+
+// ── EARNINGS ADMIN ──
+function renderAdminEarnings() {
+  const el = document.getElementById('earn-admin-list');
+  el.innerHTML = earnings.map((e,i)=>`
+    <div class="wla-item">
+      <span style="font-family:var(--mono);font-size:.8rem;min-width:50px;">${e.day} ${e.month}</span>
+      <span class="wla-co">${e.company}</span>
+      <span style="font-size:.75rem;color:var(--ink-muted);min-width:120px;">${e.time}</span>
+      <span style="font-family:var(--mono);font-size:.78rem;">${e.eps}</span>
+      <button class="btn-d" onclick="removeEarnings(${i})" style="padding:.25rem .6rem;">✕</button>
+    </div>`).join('');
+}
+
+function addEarnings() {
+  const e = {
+    day: document.getElementById('ne-day').value.trim(),
+    month: document.getElementById('ne-mo').value.trim(),
+    company: document.getElementById('ne-co').value.trim(),
+    time: document.getElementById('ne-time').value.trim() || 'Nach Börsenschluss',
+    eps: document.getElementById('ne-eps').value.trim() || '—'
+  };
+  if (!e.company) return;
+  earnings.push(e);
+  ['ne-day','ne-mo','ne-co','ne-time','ne-eps'].forEach(id=>document.getElementById(id).value='');
+  renderAdminEarnings();
+}
+
+function removeEarnings(i) { earnings.splice(i,1); renderAdminEarnings(); }
+
+function saveEarnings() {
+  persist(SK.earnings, earnings);
+  renderEarningsSidebar();
+  showOk('earn-ok');
+}
+
+function renderEarningsSidebar() {
+  // Find earnings sidebar by looking for sb-sec with earn-items
+  const all = document.querySelectorAll('.sb-sec');
+  let target = null;
+  all.forEach(s=>{ if(s.querySelector('.earn-item')||s.innerHTML.includes('Earnings')) target=s; });
+  if (!target) return;
+  const old = target.querySelectorAll('.earn-item');
+  old.forEach(e=>e.remove());
+  const div = target.querySelector('.sb-title');
+  earnings.forEach(e=>{
+    const el = document.createElement('div');
+    el.className = 'earn-item';
+    el.innerHTML = `<div class="earn-date"><span class="earn-day">${e.day}</span><span class="earn-mo">${e.month}</span></div>
+      <div><div class="earn-co">${e.company}</div><div class="earn-time">${e.time}</div></div>
+      <div class="earn-eps"><span class="earn-lbl">EPS est.</span>${e.eps}</div>`;
+    target.appendChild(el);
+  });
+}
+
+// ── UTILS ──
+function showOk(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = 'block';
+  setTimeout(()=>el.style.display='none', 2500);
+}
+
+// Close panels on backdrop click
+document.getElementById('admin-panel').addEventListener('click', function(e){ if(e.target===this) closeAdmin(); });
+document.getElementById('login-overlay').addEventListener('click', function(e){ if(e.target===this) closeLogin(); });
+
+// ════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════
+renderFeed();
+loadHeroTicker();
+loadWatchlistQuotes();
+// Refresh quotes every 5 minutes
+setInterval(()=>{ loadHeroTicker(); loadWatchlistQuotes(); }, 5 * 60 * 1000);
+</script>
+</body>
+</html>
