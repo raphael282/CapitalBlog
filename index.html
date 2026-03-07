@@ -5,30 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kapitalwerk — Märkte. Ideen. Perspektiven.</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root {
-  --brg: #2C5F2E;
-  --brg-light: #3a7a3d;
-  --brg-pale: #eef4ee;
-  --brg-muted: rgba(44,95,46,0.09);
-  --cream: #FAFAF7;
-  --ink: #181815;
-  --ink-soft: #4a4a44;
-  --ink-muted: #8a8a80;
-  --rule: rgba(44,95,46,0.13);
-  --serif: 'Playfair Display', Georgia, serif;
-  --sans: 'DM Sans', system-ui, sans-serif;
-  --mono: 'DM Mono', monospace;
-  --shadow: 0 4px 24px rgba(0,0,0,0.07);
-  --shadow-lg: 0 16px 56px rgba(0,0,0,0.14);
+:root{
+  --brg:#2C5F2E;--brg-light:#3a7a3d;--brg-pale:#eef4ee;--brg-muted:rgba(44,95,46,0.09);
+  --cream:#FAFAF7;--ink:#181815;--ink-soft:#4a4a44;--ink-muted:#8a8a80;
+  --rule:rgba(44,95,46,0.13);--serif:'Playfair Display',Georgia,serif;
+  --sans:'DM Sans',system-ui,sans-serif;--mono:'DM Mono',monospace;
+  --shadow:0 4px 24px rgba(0,0,0,0.07);--shadow-lg:0 16px 56px rgba(0,0,0,0.14);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{font-size:16px;scroll-behavior:smooth;}
 body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weight:300;line-height:1.7;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
 body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.35;}
-
-/* ── HEADER ── */
-header{position:sticky;top:0;z-index:100;background:rgba(250,250,247,0.94);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--rule);}
+header{position:sticky;top:0;z-index:100;background:rgba(250,250,247,0.94);backdrop-filter:blur(16px);border-bottom:1px solid var(--rule);}
 .header-inner{max-width:1240px;margin:0 auto;padding:0 2rem;height:70px;display:flex;align-items:center;justify-content:space-between;gap:2rem;}
 .logo{display:flex;flex-direction:column;gap:1px;text-decoration:none;flex-shrink:0;}
 .logo-name{font-family:var(--serif);font-size:1.45rem;font-weight:600;color:var(--ink);letter-spacing:-.02em;line-height:1;}
@@ -37,74 +27,78 @@ header{position:sticky;top:0;z-index:100;background:rgba(250,250,247,0.94);backd
 nav{display:flex;align-items:center;gap:2.2rem;}
 nav a{font-size:.76rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);text-decoration:none;font-weight:400;transition:color .2s;position:relative;white-space:nowrap;}
 nav a::after{content:'';position:absolute;bottom:-3px;left:0;width:0;height:1px;background:var(--brg);transition:width .25s;}
-nav a:hover{color:var(--brg);}
-nav a:hover::after{width:100%;}
+nav a:hover{color:var(--brg);}nav a:hover::after{width:100%;}
 .btn-nl{background:var(--brg);color:#fff!important;padding:.42rem 1rem;border-radius:2px;font-size:.72rem!important;transition:background .2s!important;}
-.btn-nl::after{display:none!important;}
-.btn-nl:hover{background:var(--brg-light)!important;}
-/* secret admin trigger — invisible lock icon far right */
-.admin-trigger{background:none;border:none;cursor:pointer;color:var(--ink-muted);font-size:.8rem;opacity:.25;transition:opacity .3s;padding:.3rem;margin-left:.5rem;}
-.admin-trigger:hover{opacity:1;color:var(--brg);}
-
-/* ── PAGES ── */
-.page{display:none;}
-.page.active{display:block;}
-
-/* ── HERO ── */
+.btn-nl::after{display:none!important;}.btn-nl:hover{background:var(--brg-light)!important;}
+.user-trigger{background:none;border:none;cursor:pointer;color:var(--ink-muted);font-size:.85rem;opacity:.35;transition:opacity .3s;padding:.3rem .4rem;margin-left:.5rem;}
+.user-trigger:hover,.user-trigger.logged-in{opacity:.9;color:var(--brg);}
+.page{display:none;}.page.active{display:block;}
 .hero{max-width:1240px;margin:0 auto;padding:5rem 2rem 4rem;display:grid;grid-template-columns:1.1fr .9fr;gap:5rem;align-items:end;border-bottom:1px solid var(--rule);}
 .hero h1{font-family:var(--serif);font-size:clamp(2.5rem,4.5vw,4rem);font-weight:500;line-height:1.07;letter-spacing:-.03em;margin-bottom:1.2rem;}
 .hero h1 em{color:var(--brg);font-style:italic;}
 .hero-desc{font-size:.98rem;color:var(--ink-soft);max-width:420px;line-height:1.85;}
 .ticker-label{font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-muted);padding-bottom:.5rem;border-bottom:1px solid var(--rule);margin-bottom:.25rem;display:flex;justify-content:space-between;align-items:center;}
-.ticker-label .live-dot{width:6px;height:6px;border-radius:50%;background:#f0a500;display:inline-block;margin-right:.3rem;animation:pulse 2s infinite;}
-.ticker-label .live-text{font-size:.58rem;color:#f0a500;letter-spacing:.1em;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#f0a500;display:inline-block;margin-right:.3rem;animation:pulse 2s infinite;}
+.live-text{font-size:.58rem;color:#f0a500;letter-spacing:.1em;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
-.ticker-row{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--rule);transition:background .15s;}
+.ticker-row{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--rule);}
 .ticker-name{font-family:var(--mono);font-size:.78rem;color:var(--ink);font-weight:500;}
 .ticker-val{font-family:var(--mono);font-size:.8rem;font-weight:500;}
 .ticker-chg{font-family:var(--mono);font-size:.7rem;padding:.1rem .4rem;border-radius:2px;}
-.up{color:var(--brg);}
-.down{color:#c0392b;}
-.up-bg{background:var(--brg-muted);color:var(--brg);}
-.down-bg{background:rgba(192,57,43,.08);color:#c0392b;}
-.ticker-loading{font-family:var(--mono);font-size:.75rem;color:var(--ink-muted);padding:.5rem 0;text-align:center;}
-
-/* ── MAIN GRID ── */
+.up{color:var(--brg);}.down{color:#c0392b;}
+.up-bg{background:var(--brg-muted);color:var(--brg);}.down-bg{background:rgba(192,57,43,.08);color:#c0392b;}
 .main-grid{max-width:1240px;margin:0 auto;padding:4rem 2rem;display:grid;grid-template-columns:1fr 310px;gap:5rem;}
 .sec-hdr{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:2.5rem;padding-bottom:.9rem;border-bottom:2px solid var(--brg);}
 .sec-title{font-family:var(--serif);font-size:1rem;font-weight:500;letter-spacing:.02em;}
-
-/* ── POSTS ── */
 .post-featured{margin-bottom:3rem;padding-bottom:3rem;border-bottom:1px solid var(--rule);animation:fadeUp .65s ease both;}
 .post-item{padding:1.75rem 0;border-bottom:1px solid var(--rule);animation:fadeUp .65s ease both;}
 .pmeta{display:flex;align-items:center;gap:.8rem;margin-bottom:.85rem;flex-wrap:wrap;}
 .tag{font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;font-weight:500;padding:.2rem .6rem;background:var(--brg);color:#fff;border-radius:2px;}
 .tag-o{background:transparent;color:var(--brg);border:1px solid var(--brg);}
 .pdate{font-size:.72rem;color:var(--ink-muted);}
-.f-badge{font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-muted);margin-left:auto;}
+.f-badge{font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-muted);}
 .post-featured h2{font-family:var(--serif);font-size:clamp(1.5rem,2.8vw,2.1rem);font-weight:500;line-height:1.17;letter-spacing:-.02em;margin-bottom:.85rem;}
 .post-item h3{font-family:var(--serif);font-size:1.22rem;font-weight:500;line-height:1.22;letter-spacing:-.01em;margin-bottom:.5rem;}
 .post-featured h2 a,.post-item h3 a{text-decoration:none;color:inherit;transition:color .2s;cursor:pointer;}
 .post-featured h2 a:hover,.post-item h3 a:hover{color:var(--brg);}
 .pexcerpt{font-size:.95rem;color:var(--ink-soft);line-height:1.8;margin-bottom:1.1rem;}
 .post-item .pexcerpt{font-size:.87rem;}
-.pullquote{border-left:2px solid var(--brg);padding:.45rem 1rem;margin:1.1rem 0;font-family:var(--serif);font-style:italic;font-size:.95rem;color:var(--brg);background:var(--brg-muted);}
 .btn-read{display:inline-flex;align-items:center;gap:.4rem;font-size:.76rem;letter-spacing:.08em;text-transform:uppercase;color:var(--brg);background:none;border:none;cursor:pointer;font-family:var(--sans);font-weight:500;padding:0;transition:gap .2s;}
 .btn-read:hover{gap:.7rem;}
+.fav-btn{background:none;border:1px solid var(--rule);border-radius:2px;cursor:pointer;font-size:.68rem;padding:.18rem .55rem;color:var(--ink-muted);font-family:var(--sans);transition:all .2s;}
+.fav-btn:hover{border-color:var(--brg);color:var(--brg);}
+.fav-btn.active{background:var(--brg-muted);border-color:var(--brg);color:var(--brg);}
 .empty-state{padding:3rem 0;color:var(--ink-muted);font-size:.9rem;font-style:italic;}
-
-/* ── ARTICLE PAGE ── */
-#page-article{max-width:1240px;margin:0 auto;padding:4rem 2rem;}
+#page-blog{max-width:1240px;margin:0 auto;padding:4rem 2rem;}
+.blog-feed{max-width:860px;}
+.blog-article{padding:3rem 0;border-bottom:1px solid var(--rule);animation:fadeUp .6s ease both;}
+.blog-article h2{font-family:var(--serif);font-size:clamp(1.5rem,2.6vw,2.1rem);font-weight:500;line-height:1.15;letter-spacing:-.025em;margin-bottom:.9rem;}
+.blog-article-body{font-size:1.02rem;line-height:1.87;color:var(--ink-soft);}
+.blog-article-body p{margin-bottom:1.3rem;}
+.blog-article-body h2{font-family:var(--serif);font-size:1.45rem;font-weight:500;color:var(--ink);margin:2rem 0 .8rem;}
+.blog-article-body blockquote{border-left:2px solid var(--brg);padding:.5rem 1.2rem;margin:1.4rem 0;font-family:var(--serif);font-style:italic;color:var(--brg);background:var(--brg-muted);}
+.blog-divider{display:flex;align-items:center;gap:1rem;margin:1.2rem 0 1.8rem;}
+.blog-divider::after{content:'';flex:1;height:1px;background:var(--rule);}
+.blog-divider span{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-muted);}
 .art-back{display:inline-flex;align-items:center;gap:.4rem;font-size:.76rem;letter-spacing:.08em;text-transform:uppercase;color:var(--brg);background:none;border:none;cursor:pointer;font-family:var(--sans);font-weight:500;margin-bottom:2.5rem;transition:gap .2s;}
 .art-back:hover{gap:.7rem;}
 .art-hdr{max-width:780px;margin-bottom:2.5rem;}
 .art-hdr h1{font-family:var(--serif);font-size:clamp(1.9rem,3.5vw,2.8rem);font-weight:500;line-height:1.1;letter-spacing:-.03em;margin-top:.75rem;}
 .art-body{max-width:760px;font-size:1.04rem;line-height:1.87;color:var(--ink-soft);}
 .art-body p{margin-bottom:1.4rem;}
-.art-body h2{font-family:var(--serif);font-size:1.55rem;font-weight:500;color:var(--ink);margin:2.5rem 0 .9rem;letter-spacing:-.02em;}
-.art-body blockquote{border-left:2px solid var(--brg);padding:.5rem 1.2rem;margin:1.5rem 0;font-family:var(--serif);font-style:italic;font-size:1.02rem;color:var(--brg);background:var(--brg-muted);}
-
-/* ── SIDEBAR ── */
+.art-body h2{font-family:var(--serif);font-size:1.55rem;font-weight:500;color:var(--ink);margin:2.5rem 0 .9rem;}
+.art-body blockquote{border-left:2px solid var(--brg);padding:.5rem 1.2rem;margin:1.5rem 0;font-family:var(--serif);font-style:italic;color:var(--brg);background:var(--brg-muted);}
+.about-inner{max-width:680px;}
+.about-eyebrow{font-size:.65rem;letter-spacing:.22em;text-transform:uppercase;color:var(--brg);margin-bottom:1.2rem;font-weight:500;}
+.about-inner h1{font-family:var(--serif);font-size:clamp(2.2rem,4vw,3.2rem);font-weight:500;line-height:1.1;letter-spacing:-.03em;margin-bottom:2rem;}
+.about-inner h1 em{color:var(--brg);font-style:italic;}
+.about-body{font-size:1.05rem;line-height:1.9;color:var(--ink-soft);}
+.about-body p{margin-bottom:1.6rem;}
+.about-sig-name{font-family:var(--serif);font-size:1.3rem;font-weight:500;color:var(--ink);margin-top:2.5rem;padding-top:2rem;border-top:1px solid var(--rule);}
+.about-sig-title{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);margin-top:.2rem;}
+.about-disclaimer{margin-top:2.5rem;padding:1.5rem;border:1px solid var(--rule);border-left:3px solid var(--brg);background:var(--brg-muted);}
+.about-disclaimer p{font-size:.82rem;color:var(--ink-muted);line-height:1.7;margin:0;}
+.about-disclaimer strong{color:var(--brg);}
 .sb-sec{margin-bottom:3rem;}
 .sb-title{font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:1.1rem;padding-bottom:.65rem;border-bottom:1px solid var(--rule);}
 .wl-item{display:flex;justify-content:space-between;align-items:center;padding:.65rem 0;border-bottom:1px solid var(--rule);}
@@ -116,8 +110,7 @@ nav a:hover::after{width:100%;}
 .earn-date{min-width:38px;text-align:center;background:var(--brg-muted);border:1px solid var(--rule);padding:.25rem .3rem;border-radius:3px;}
 .earn-day{display:block;font-family:var(--mono);font-size:.85rem;font-weight:500;color:var(--brg);line-height:1;}
 .earn-mo{display:block;font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);}
-.earn-co{font-size:.82rem;font-weight:500;}
-.earn-time{font-size:.67rem;color:var(--ink-muted);}
+.earn-co{font-size:.82rem;font-weight:500;}.earn-time{font-size:.67rem;color:var(--ink-muted);}
 .earn-eps{font-family:var(--mono);font-size:.72rem;color:var(--ink-soft);text-align:right;margin-left:auto;}
 .earn-lbl{font-size:.57rem;color:var(--ink-muted);display:block;}
 .nl-box{background:var(--brg);padding:1.75rem;border-radius:4px;}
@@ -125,129 +118,90 @@ nav a:hover::after{width:100%;}
 .nl-box p{font-size:.82rem;color:rgba(255,255,255,.7);margin-bottom:1.1rem;line-height:1.6;}
 .nl-cta{display:block;width:100%;background:#fff;color:var(--brg);border:none;padding:.72rem;font-family:var(--sans);font-size:.73rem;letter-spacing:.1em;text-transform:uppercase;font-weight:500;cursor:pointer;border-radius:2px;text-align:center;text-decoration:none;transition:opacity .2s;}
 .nl-cta:hover{opacity:.88;}
-
-/* ── LOGIN OVERLAY ── */
-#login-overlay{position:fixed;inset:0;background:rgba(24,24,21,.85);backdrop-filter:blur(8px);z-index:300;display:none;align-items:center;justify-content:center;}
-#login-overlay.open{display:flex;}
-.login-box{background:var(--cream);border:1px solid var(--rule);border-radius:6px;padding:2.5rem;width:100%;max-width:360px;box-shadow:var(--shadow-lg);}
-.login-box h3{font-family:var(--serif);font-size:1.4rem;font-weight:500;margin-bottom:.4rem;}
-.login-box p{font-size:.82rem;color:var(--ink-muted);margin-bottom:1.5rem;}
-.login-box input{width:100%;background:#fff;border:1px solid var(--rule);padding:.72rem .9rem;font-family:var(--sans);font-size:.9rem;color:var(--ink);border-radius:3px;outline:none;transition:border-color .2s;margin-bottom:.75rem;}
-.login-box input:focus{border-color:var(--brg);}
-.login-box input[type=password]{letter-spacing:.15em;}
-.login-err{font-size:.78rem;color:#c0392b;margin-bottom:.75rem;display:none;}
-.login-btns{display:flex;gap:.6rem;}
-.btn-login{flex:1;background:var(--brg);color:#fff;border:none;padding:.72rem;font-family:var(--sans);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;font-weight:500;cursor:pointer;border-radius:3px;transition:background .2s;}
-.btn-login:hover{background:var(--brg-light);}
-.btn-cancel{background:transparent;color:var(--ink-muted);border:1px solid var(--rule);padding:.72rem 1rem;font-family:var(--sans);font-size:.78rem;cursor:pointer;border-radius:3px;transition:all .2s;}
-.btn-cancel:hover{border-color:var(--ink-muted);}
-
-/* ── ADMIN PANEL ── */
+.overlay{position:fixed;inset:0;background:rgba(24,24,21,.82);backdrop-filter:blur(8px);z-index:300;display:none;align-items:center;justify-content:center;padding:1rem;}
+.overlay.open{display:flex;}
+#user-menu-panel{position:fixed;top:76px;right:2rem;background:var(--cream);border:1px solid var(--rule);border-radius:4px;box-shadow:var(--shadow-lg);z-index:200;min-width:210px;display:none;padding:.5rem 0;animation:fadeUp .15s ease;}
+#user-menu-panel.open{display:block;}
+.umenu-user{padding:.75rem 1.2rem;border-bottom:1px solid var(--rule);margin-bottom:.3rem;}
+.umenu-username{font-weight:500;color:var(--ink);font-size:.85rem;}
+.umenu-email{font-size:.72rem;color:var(--ink-muted);}
+.umenu-item{display:block;width:100%;padding:.7rem 1.2rem;font-size:.8rem;color:var(--ink-soft);background:none;border:none;cursor:pointer;font-family:var(--sans);text-align:left;transition:background .15s;}
+.umenu-item:hover{background:var(--brg-muted);color:var(--brg);}
+.umenu-divider{border:none;border-top:1px solid var(--rule);margin:.3rem 0;}
+.modal-box{background:var(--cream);border:1px solid var(--rule);border-radius:6px;width:100%;max-width:400px;padding:2.5rem;box-shadow:var(--shadow-lg);position:relative;}
+.modal-close{position:absolute;top:1.1rem;right:1.3rem;background:none;border:none;font-size:1.25rem;cursor:pointer;color:var(--ink-muted);}
+.modal-close:hover{color:var(--ink);}
+.auth-logo{font-family:var(--serif);font-size:1.3rem;font-weight:600;margin-bottom:.25rem;}
+.auth-logo span{color:var(--brg);}
+.auth-tabs{display:flex;margin:1.4rem 0;border-bottom:1px solid var(--rule);}
+.auth-tab{flex:1;padding:.7rem;font-size:.73rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border:none;background:none;color:var(--ink-muted);font-family:var(--sans);border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .2s;}
+.auth-tab.active{color:var(--brg);border-bottom-color:var(--brg);}
+.auth-sec{display:none;}.auth-sec.active{display:block;}
+.fg{margin-bottom:1rem;}
+.fg label{display:block;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:.35rem;}
+.fg input{width:100%;background:#fff;border:1px solid var(--rule);padding:.68rem .85rem;font-family:var(--sans);font-size:.88rem;color:var(--ink);border-radius:3px;outline:none;transition:border-color .2s;}
+.fg input:focus{border-color:var(--brg);}
+.btn-p{background:var(--brg);color:#fff;border:none;padding:.7rem 1.4rem;font-family:var(--sans);font-size:.76rem;letter-spacing:.08em;text-transform:uppercase;font-weight:500;cursor:pointer;border-radius:3px;width:100%;transition:background .2s;}
+.btn-p:hover{background:var(--brg-light);}
+.btn-p:disabled{opacity:.5;cursor:not-allowed;}
+.msg-err{font-size:.78rem;color:#c0392b;margin-bottom:.8rem;display:none;padding:.4rem .7rem;background:rgba(192,57,43,.07);border-radius:3px;}
+.msg-ok{font-size:.78rem;color:var(--brg);margin-bottom:.8rem;display:none;padding:.4rem .7rem;background:var(--brg-muted);border-radius:3px;}
 #admin-panel{position:fixed;inset:0;background:rgba(24,24,21,.75);backdrop-filter:blur(6px);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem;}
 #admin-panel.open{display:flex;}
 .admin-modal{background:var(--cream);border:1px solid var(--rule);border-radius:6px;width:100%;max-width:840px;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;}
 .admin-hdr{display:flex;align-items:center;justify-content:space-between;padding:1.4rem 2rem;border-bottom:1px solid var(--rule);position:sticky;top:0;background:var(--cream);z-index:1;flex-shrink:0;}
 .admin-hdr h2{font-family:var(--serif);font-size:1.25rem;font-weight:500;}
 .admin-hdr-right{display:flex;align-items:center;gap:1rem;}
-.admin-logout{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);background:none;border:none;cursor:pointer;font-family:var(--sans);}
-.admin-logout:hover{color:#c0392b;}
-.a-close{background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--ink-muted);line-height:1;}
+.a-logout{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);background:none;border:none;cursor:pointer;font-family:var(--sans);}
+.a-logout:hover{color:#c0392b;}
+.a-close{background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--ink-muted);}
 .a-close:hover{color:var(--ink);}
 .admin-tabs{display:flex;border-bottom:1px solid var(--rule);padding:0 2rem;flex-shrink:0;}
 .a-tab{padding:.85rem 1.1rem;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border:none;background:none;color:var(--ink-muted);font-family:var(--sans);border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .2s;}
 .a-tab.active{color:var(--brg);border-bottom-color:var(--brg);}
-.admin-body{padding:2rem;overflow-y:auto;}
-.a-sec{display:none;}
-.a-sec.active{display:block;}
-.fg{margin-bottom:1.2rem;}
-.fg label{display:block;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:.4rem;}
-.fg input,.fg textarea,.fg select{width:100%;background:#fff;border:1px solid var(--rule);padding:.68rem .85rem;font-family:var(--sans);font-size:.88rem;color:var(--ink);border-radius:3px;outline:none;transition:border-color .2s;}
-.fg input:focus,.fg textarea:focus,.fg select:focus{border-color:var(--brg);}
-.fg textarea{min-height:130px;resize:vertical;line-height:1.7;}
-.btn-p{background:var(--brg);color:#fff;border:none;padding:.68rem 1.4rem;font-family:var(--sans);font-size:.76rem;letter-spacing:.08em;text-transform:uppercase;font-weight:500;cursor:pointer;border-radius:3px;transition:background .2s;}
-.btn-p:hover{background:var(--brg-light);}
-.btn-d{background:transparent;color:#c0392b;border:1px solid rgba(192,57,43,.28);padding:.48rem .9rem;font-family:var(--sans);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;border-radius:3px;transition:all .2s;}
-.btn-d:hover{background:rgba(192,57,43,.07);}
-.btn-s{background:transparent;color:var(--brg);border:1px solid var(--brg);padding:.48rem .9rem;font-family:var(--sans);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;border-radius:3px;transition:all .2s;margin-right:.4rem;}
-.btn-s:hover{background:var(--brg-muted);}
+.admin-body{padding:2rem;}
+.a-sec{display:none;}.a-sec.active{display:block;}
+.fga{margin-bottom:1.2rem;}
+.fga label{display:block;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:.4rem;}
+.fga input,.fga textarea,.fga select{width:100%;background:#fff;border:1px solid var(--rule);padding:.68rem .85rem;font-family:var(--sans);font-size:.88rem;color:var(--ink);border-radius:3px;outline:none;transition:border-color .2s;}
+.fga input:focus,.fga textarea:focus,.fga select:focus{border-color:var(--brg);}
+.fga textarea{min-height:130px;resize:vertical;line-height:1.7;}
+.btn-pa{background:var(--brg);color:#fff;border:none;padding:.65rem 1.3rem;font-family:var(--sans);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;font-weight:500;cursor:pointer;border-radius:3px;transition:background .2s;}
+.btn-pa:hover{background:var(--brg-light);}
+.btn-da{background:transparent;color:#c0392b;border:1px solid rgba(192,57,43,.28);padding:.45rem .85rem;font-family:var(--sans);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;border-radius:3px;transition:all .2s;}
+.btn-da:hover{background:rgba(192,57,43,.07);}
+.btn-sa{background:transparent;color:var(--brg);border:1px solid var(--brg);padding:.45rem .85rem;font-family:var(--sans);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;border-radius:3px;margin-right:.4rem;}
+.btn-sa:hover{background:var(--brg-muted);}
 .ali{display:flex;align-items:center;justify-content:space-between;padding:.9rem 0;border-bottom:1px solid var(--rule);gap:1rem;}
 .ali-meta{flex:1;min-width:0;}
 .ali-title{font-family:var(--serif);font-size:.95rem;font-weight:500;margin-bottom:.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ali-info{font-size:.72rem;color:var(--ink-muted);}
 .ali-actions{display:flex;gap:.4rem;flex-shrink:0;}
-.wla-item{display:flex;align-items:center;gap:.6rem;padding:.6rem 0;border-bottom:1px solid var(--rule);flex-wrap:wrap;}
-.wla-ticker{font-family:var(--mono);font-size:.83rem;font-weight:500;min-width:58px;}
-.wla-co{font-size:.8rem;color:var(--ink-soft);flex:1;min-width:80px;}
-.sm-input{padding:.28rem .5rem!important;font-family:var(--mono)!important;font-size:.78rem!important;border:1px solid var(--rule)!important;border-radius:2px!important;background:#fff!important;width:auto!important;}
-.add-row{display:grid;grid-template-columns:90px 1fr 95px 80px 70px 36px;gap:.6rem;align-items:end;margin-top:1.1rem;}
-.add-row .fg{margin:0;}
 .ok-msg{background:var(--brg-muted);border:1px solid rgba(44,95,46,.25);color:var(--brg);padding:.5rem .9rem;border-radius:3px;font-size:.8rem;margin-bottom:1rem;display:none;}
 .ft-toggle{display:flex;align-items:center;gap:.55rem;cursor:pointer;}
 .ft-toggle input{width:15px;height:15px;accent-color:var(--brg);cursor:pointer;}
 .ft-toggle span{font-size:.82rem;color:var(--ink-soft);}
 .hint{font-size:.76rem;color:var(--ink-muted);margin-top:.3rem;line-height:1.5;}
 hr.div{border:none;border-top:1px solid var(--rule);margin:1.4rem 0;}
-
-/* ── BLOG PAGE ── */
-#page-blog{max-width:1240px;margin:0 auto;padding:4rem 2rem;}
-.blog-feed{max-width:860px;}
-.blog-article{padding:3rem 0;border-bottom:1px solid var(--rule);animation:fadeUp .6s ease both;}
-.blog-article:first-child{padding-top:0;}
-.blog-article h2{font-family:var(--serif);font-size:clamp(1.6rem,2.8vw,2.2rem);font-weight:500;line-height:1.15;letter-spacing:-.025em;margin-bottom:.9rem;color:var(--ink);}
-.blog-article-body{font-size:1.02rem;line-height:1.87;color:var(--ink-soft);}
-.blog-article-body p{margin-bottom:1.3rem;}
-.blog-article-body h2{font-family:var(--serif);font-size:1.5rem;font-weight:500;color:var(--ink);margin:2.2rem 0 .8rem;letter-spacing:-.02em;}
-.blog-article-body blockquote{border-left:2px solid var(--brg);padding:.5rem 1.2rem;margin:1.4rem 0;font-family:var(--serif);font-style:italic;font-size:1rem;color:var(--brg);background:var(--brg-muted);}
-.blog-divider{display:flex;align-items:center;gap:1rem;margin:1.5rem 0 2rem;}
-.blog-divider::after{content:'';flex:1;height:1px;background:var(--rule);}
-.blog-divider span{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-muted);}
-
-/* ── ABOUT PAGE ── */
-#page-about{max-width:1240px;margin:0 auto;padding:5rem 2rem;}
-.about-inner{max-width:680px;}
-.about-eyebrow{font-size:.65rem;letter-spacing:.22em;text-transform:uppercase;color:var(--brg);margin-bottom:1.2rem;font-weight:500;}
-.about-inner h1{font-family:var(--serif);font-size:clamp(2.2rem,4vw,3.2rem);font-weight:500;line-height:1.1;letter-spacing:-.03em;margin-bottom:2rem;}
-.about-inner h1 em{color:var(--brg);font-style:italic;}
-.about-body{font-size:1.05rem;line-height:1.9;color:var(--ink-soft);}
-.about-body p{margin-bottom:1.6rem;}
-.about-body p:last-child{margin-bottom:0;}
-.about-signature{margin-top:3rem;padding-top:2rem;border-top:1px solid var(--rule);display:flex;align-items:center;gap:1.5rem;}
-.about-sig-name{font-family:var(--serif);font-size:1.3rem;font-weight:500;color:var(--ink);}
-.about-sig-title{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);}
-.about-disclaimer{margin-top:3rem;padding:1.5rem;border:1px solid var(--rule);border-left:3px solid var(--brg);background:var(--brg-muted);}
-.about-disclaimer p{font-size:.82rem;color:var(--ink-muted);line-height:1.7;margin:0;}
-.about-disclaimer strong{color:var(--brg);}
-
-/* ── FOOTER ── */
+.wla-item{display:flex;align-items:center;gap:.6rem;padding:.6rem 0;border-bottom:1px solid var(--rule);}
+.wla-ticker{font-family:var(--mono);font-size:.83rem;font-weight:500;min-width:60px;}
+.wla-co{font-size:.8rem;color:var(--ink-soft);flex:1;}
 footer{border-top:1px solid var(--rule);margin-top:2rem;}
 .ft-inner{max-width:1240px;margin:0 auto;padding:2.4rem 2rem;display:flex;justify-content:space-between;align-items:center;}
 .ft-r{font-size:.71rem;color:var(--ink-muted);text-align:right;line-height:1.8;}
 .ft-disc{font-size:.67rem;color:var(--ink-muted);max-width:1240px;margin:0 auto;padding:0 2rem 2rem;border-top:1px solid var(--rule);padding-top:1.2rem;line-height:1.6;}
-
-/* ── ANIMATIONS ── */
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
-
-/* ── RESPONSIVE ── */
 @media(max-width:960px){
   .hero{grid-template-columns:1fr;gap:2.5rem;padding:3rem 1.5rem 2.5rem;}
   .main-grid{grid-template-columns:1fr;gap:3rem;padding:2.5rem 1.5rem;}
-  .ft-inner{flex-direction:column;gap:1rem;text-align:center;}
-  .ft-r{text-align:center;}
-  nav{gap:1.2rem;}
-  .btn-nl{display:none;}
+  .ft-inner{flex-direction:column;gap:1rem;text-align:center;}.ft-r{text-align:center;}
+  nav{gap:1.2rem;}.btn-nl{display:none;}
 }
-@media(max-width:640px){
-  .header-inner{padding:0 1rem;}
-  nav{gap:.8rem;}
-  nav a{font-size:.7rem;}
-  #page-article{padding:2.5rem 1.25rem;}
-  .add-row{grid-template-columns:1fr 1fr;}
-}
+@media(max-width:640px){.header-inner{padding:0 1rem;}nav{gap:.8rem;}nav a{font-size:.7rem;}}
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <header>
   <div class="header-inner">
     <a href="#" class="logo" onclick="showPage('home');return false;">
@@ -259,14 +213,14 @@ footer{border-top:1px solid var(--rule);margin-top:2rem;}
       <a href="#" onclick="showPage('about');return false;">Über mich</a>
       <a href="https://raphaels-newsletter-0e69d6.beehiiv.com/" target="_blank" class="btn-nl">Newsletter</a>
     </nav>
-    <!-- Secret admin trigger — small lock, barely visible -->
-    <button class="admin-trigger" onclick="promptLogin()" title="Admin">&#9679;&#9679;&#9679;</button>
+    <button class="user-trigger" id="user-trigger" onclick="toggleUserMenu()">&#9679;&#9679;&#9679;</button>
   </div>
 </header>
 
-<!-- ═══════════ HOME PAGE ═══════════ -->
-<div id="page-home" class="page active">
+<div id="user-menu-panel"><div id="user-menu-content"></div></div>
 
+<!-- HOME -->
+<div id="page-home" class="page active">
   <section class="hero">
     <div>
       <h1>Märkte lesen.<br><em>Klüger</em> investieren.</h1>
@@ -277,41 +231,25 @@ footer{border-top:1px solid var(--rule);margin-top:2rem;}
         <span>Marktüberblick</span>
         <span><span class="live-dot"></span><span class="live-text">15 MIN VERZÖGERT</span></span>
       </div>
-      <div id="ticker-display"><div class="ticker-loading">Kurse werden geladen…</div></div>
+      <div id="ticker-display"><div style="font-family:var(--mono);font-size:.75rem;color:var(--ink-muted);padding:.5rem 0;">Wird geladen…</div></div>
     </div>
   </section>
-
   <div class="main-grid">
     <main>
       <div class="sec-hdr"><span class="sec-title">Neueste Artikel</span></div>
-      <div id="post-feed"></div>
+      <div id="post-feed"><div class="empty-state">Artikel werden geladen…</div></div>
     </main>
-
     <aside>
-      <div class="sb-sec" id="watchlist-anchor">
+      <div class="sb-sec">
         <div class="sb-title">Watchlist</div>
-        <div id="watchlist-display"><div class="ticker-loading">Kurse werden geladen…</div></div>
+        <div id="watchlist-display"><div style="font-family:var(--mono);font-size:.75rem;color:var(--ink-muted);">Wird geladen…</div></div>
       </div>
-
       <div class="sb-sec">
         <div class="sb-title">Earnings Kalender</div>
-        <div class="earn-item">
-          <div class="earn-date"><span class="earn-day">06</span><span class="earn-mo">Mär</span></div>
-          <div><div class="earn-co">CrowdStrike</div><div class="earn-time">Nach Börsenschluss</div></div>
-          <div class="earn-eps"><span class="earn-lbl">EPS est.</span>$0.84</div>
-        </div>
-        <div class="earn-item">
-          <div class="earn-date"><span class="earn-day">12</span><span class="earn-mo">Mär</span></div>
-          <div><div class="earn-co">Adobe</div><div class="earn-time">Nach Börsenschluss</div></div>
-          <div class="earn-eps"><span class="earn-lbl">EPS est.</span>$4.97</div>
-        </div>
-        <div class="earn-item">
-          <div class="earn-date"><span class="earn-day">20</span><span class="earn-mo">Mär</span></div>
-          <div><div class="earn-co">Nike</div><div class="earn-time">Nach Börsenschluss</div></div>
-          <div class="earn-eps"><span class="earn-lbl">EPS est.</span>$0.29</div>
-        </div>
+        <div class="earn-item"><div class="earn-date"><span class="earn-day">12</span><span class="earn-mo">Mär</span></div><div><div class="earn-co">Adobe</div><div class="earn-time">Nach Börsenschluss</div></div><div class="earn-eps"><span class="earn-lbl">EPS est.</span>$4.97</div></div>
+        <div class="earn-item"><div class="earn-date"><span class="earn-day">20</span><span class="earn-mo">Mär</span></div><div><div class="earn-co">Nike</div><div class="earn-time">Nach Börsenschluss</div></div><div class="earn-eps"><span class="earn-lbl">EPS est.</span>$0.29</div></div>
+        <div class="earn-item"><div class="earn-date"><span class="earn-day">26</span><span class="earn-mo">Mär</span></div><div><div class="earn-co">Lululemon</div><div class="earn-time">Nach Börsenschluss</div></div><div class="earn-eps"><span class="earn-lbl">EPS est.</span>$6.00</div></div>
       </div>
-
       <div class="sb-sec">
         <div class="nl-box">
           <h4>Kein Artikel verpassen.</h4>
@@ -323,156 +261,127 @@ footer{border-top:1px solid var(--rule);margin-top:2rem;}
   </div>
 </div>
 
-<!-- ═══════════ BLOG PAGE ═══════════ -->
+<!-- BLOG -->
 <div id="page-blog" class="page">
   <div style="max-width:1240px;margin:0 auto;padding:4rem 2rem;">
-    <div class="sec-hdr" style="margin-bottom:3rem;"><span class="sec-title">Alle Artikel</span></div>
-    <div class="blog-feed" id="blog-feed"></div>
+    <div class="sec-hdr" style="max-width:860px;margin-bottom:3rem;"><span class="sec-title">Alle Artikel</span></div>
+    <div class="blog-feed" id="blog-feed"><div class="empty-state">Artikel werden geladen…</div></div>
   </div>
 </div>
 
-<!-- ═══════════ ABOUT PAGE ═══════════ -->
-<div id="page-about" class="page">
-  <div class="about-inner">
-    <div class="about-eyebrow">Über den Autor</div>
-    <h1>Ich bin Raphael —<br>und Märkte sind <em>meine Passion.</em></h1>
-    <div class="about-body">
-      <p>Seit Jahren begleitet mich die Börse nicht als Beruf, sondern als echte Leidenschaft. Was als Neugier begann, ist heute ein tägliches Ritual geworden: Märkte beobachten, Zahlen hinterfragen, Zusammenhänge verstehen. Nicht aus Pflicht — sondern weil es mich aufrichtig fasziniert.</p>
-      <p>Meine Entscheidungen basieren auf dem Zusammenspiel zweier Welten: der <strong>fundamentalen Analyse</strong>, die mir sagt, was ein Unternehmen wert ist, und der <strong>technischen Analyse</strong>, die mir zeigt, wann der Markt bereit ist, das anzuerkennen. Beide allein reichen mir nicht — erst gemeinsam ergeben sie ein vollständiges Bild.</p>
-      <p>Kapitalwerk ist der Ort, an dem ich meine Gedanken teile. Aktienideen, die mich beschäftigen. Quartalszahlen, die ich für relevant halte. Marktbewegungen, die ich anders lese als den Konsens. Kein Lärm, keine heißen Tipps — nur ehrliche Perspektiven eines Menschen, der sich täglich mit diesen Fragen auseinandersetzt.</p>
-      <p>Ich habe mir immer gewünscht, eine solche Quelle zu haben: jemanden, der unabhängig denkt, transparent teilt und keine versteckten Interessen verfolgt. Kapitalwerk ist mein Versuch, genau das zu sein.</p>
-    </div>
-    <div class="about-signature">
-      <div>
-        <div class="about-sig-name">Raphael Bücker</div>
-        <div class="about-sig-title">Gründer · Kapitalwerk</div>
-      </div>
-    </div>
-    <div class="about-disclaimer">
-      <p><strong>Wichtiger Hinweis:</strong> Alle Inhalte auf Kapitalwerk sind ausschließlich meine persönlichen Gedanken und Meinungen. Sie stellen keine Anlageberatung, keine Kaufempfehlung und keine Aufforderung zum Handeln dar. Jeder ist für seine eigenen Finanzentscheidungen selbst verantwortlich. Bitte nutze Kapitalwerk als das, was es ist — eine Informationsquelle und Denkanstoß, nicht mehr.</p>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════ ARTICLE PAGE ═══════════ -->
+<!-- ARTICLE -->
 <div id="page-article" class="page">
-  <div id="page-article-inner" style="max-width:1240px;margin:0 auto;padding:4rem 2rem;">
+  <div style="max-width:1240px;margin:0 auto;padding:4rem 2rem;">
     <button class="art-back" onclick="showPage('blog')">← Zurück zu den Artikeln</button>
-    <div class="art-hdr">
-      <div class="pmeta" id="art-meta"></div>
-      <h1 id="art-title"></h1>
-    </div>
+    <div class="art-hdr"><div class="pmeta" id="art-meta"></div><h1 id="art-title"></h1></div>
     <div class="art-body" id="art-body"></div>
   </div>
 </div>
 
-<!-- ═══════════ LOGIN OVERLAY ═══════════ -->
-<div id="login-overlay">
-  <div class="login-box">
-    <h3>Admin-Zugang</h3>
-    <p>Bitte Passwort eingeben um fortzufahren.</p>
-    <input type="password" id="pw-input" placeholder="Passwort" onkeydown="if(event.key==='Enter')checkLogin()">
-    <div class="login-err" id="login-err">Falsches Passwort.</div>
-    <div class="login-btns">
-      <button class="btn-login" onclick="checkLogin()">Einloggen</button>
-      <button class="btn-cancel" onclick="closeLogin()">Abbrechen</button>
+<!-- ABOUT -->
+<div id="page-about" class="page">
+  <div style="max-width:1240px;margin:0 auto;padding:5rem 2rem;">
+    <div class="about-inner">
+      <div class="about-eyebrow">Über den Autor</div>
+      <h1>Ich bin Raphael —<br>und Märkte sind <em>meine Passion.</em></h1>
+      <div class="about-body">
+        <p>Seit Jahren begleitet mich die Börse nicht als Beruf, sondern als echte Leidenschaft. Was als Neugier begann, ist heute ein tägliches Ritual geworden: Märkte beobachten, Zahlen hinterfragen, Zusammenhänge verstehen. Nicht aus Pflicht — sondern weil es mich aufrichtig fasziniert.</p>
+        <p>Meine Entscheidungen basieren auf dem Zusammenspiel zweier Welten: der <strong>fundamentalen Analyse</strong>, die mir sagt, was ein Unternehmen wert ist, und der <strong>technischen Analyse</strong>, die mir zeigt, wann der Markt bereit ist, das anzuerkennen. Beide allein reichen mir nicht — erst gemeinsam ergeben sie ein vollständiges Bild.</p>
+        <p>Kapitalwerk ist der Ort, an dem ich meine Gedanken teile. Aktienideen, die mich beschäftigen. Quartalszahlen, die ich für relevant halte. Marktbewegungen, die ich anders lese als den Konsens. Kein Lärm, keine heißen Tipps — nur ehrliche Perspektiven eines Menschen, der sich täglich mit diesen Fragen auseinandersetzt.</p>
+        <p>Ich habe mir immer gewünscht, eine solche Quelle zu haben: jemanden, der unabhängig denkt, transparent teilt und keine versteckten Interessen verfolgt. Kapitalwerk ist mein Versuch, genau das zu sein.</p>
+      </div>
+      <div class="about-sig-name">Raphael Bücker</div>
+      <div class="about-sig-title">Gründer · Kapitalwerk</div>
+      <div class="about-disclaimer" style="margin-top:2.5rem;">
+        <p><strong>Wichtiger Hinweis:</strong> Alle Inhalte auf Kapitalwerk sind ausschließlich meine persönlichen Gedanken und Meinungen. Sie stellen keine Anlageberatung dar. Jeder ist für seine eigenen Finanzentscheidungen selbst verantwortlich. Bitte nutze Kapitalwerk als das, was es ist — eine Informationsquelle und Denkanstoß, nicht mehr.</p>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ═══════════ ADMIN PANEL ═══════════ -->
+<!-- FAVORITES -->
+<div id="page-favorites" class="page">
+  <div style="max-width:1240px;margin:0 auto;padding:4rem 2rem;">
+    <div class="sec-hdr" style="max-width:860px;margin-bottom:3rem;"><span class="sec-title">Meine Favoriten</span></div>
+    <div id="favorites-feed"><div class="empty-state">Noch keine Favoriten gespeichert.</div></div>
+  </div>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="overlay" id="auth-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeAuthModal()">✕</button>
+    <div class="auth-logo">Kapital<span>werk</span></div>
+    <p style="font-size:.8rem;color:var(--ink-muted);">Konto erstellen oder einloggen</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login-btn" onclick="switchAuthTab('login')">Einloggen</button>
+      <button class="auth-tab" id="tab-register-btn" onclick="switchAuthTab('register')">Registrieren</button>
+    </div>
+    <div class="auth-sec active" id="auth-login">
+      <div class="msg-err" id="login-err"></div>
+      <div class="msg-ok" id="login-ok"></div>
+      <div class="fg"><label>E-Mail</label><input type="email" id="login-email" placeholder="deine@email.de"></div>
+      <div class="fg"><label>Passwort</label><input type="password" id="login-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="btn-p" onclick="doLogin()" id="login-btn">Einloggen</button>
+    </div>
+    <div class="auth-sec" id="auth-register">
+      <div class="msg-err" id="reg-err"></div>
+      <div class="msg-ok" id="reg-ok"></div>
+      <div class="fg"><label>Username</label><input type="text" id="reg-username" placeholder="z.B. MaxMustermann"></div>
+      <div class="fg"><label>E-Mail</label><input type="email" id="reg-email" placeholder="deine@email.de"></div>
+      <div class="fg"><label>Passwort</label><input type="password" id="reg-pw" placeholder="Mindestens 6 Zeichen" onkeydown="if(event.key==='Enter')doRegister()"></div>
+      <button class="btn-p" onclick="doRegister()" id="reg-btn">Konto erstellen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
 <div id="admin-panel">
   <div class="admin-modal">
     <div class="admin-hdr">
       <h2>Kapitalwerk Admin</h2>
       <div class="admin-hdr-right">
-        <button class="admin-logout" onclick="logout()">Ausloggen</button>
+        <button class="a-logout" onclick="doLogout();closeAdmin()">Ausloggen</button>
         <button class="a-close" onclick="closeAdmin()">✕</button>
       </div>
     </div>
     <div class="admin-tabs">
-      <button class="a-tab active" onclick="switchTab('articles',this)">Artikel</button>
-      <button class="a-tab" onclick="switchTab('new-article',this)">Neuer Artikel</button>
-      <button class="a-tab" onclick="switchTab('watchlist',this)">Watchlist</button>
-      <button class="a-tab" onclick="switchTab('earnings',this)">Earnings</button>
+      <button class="a-tab active" onclick="switchAdminTab('articles',this)">Artikel</button>
+      <button class="a-tab" onclick="switchAdminTab('new-article',this)">Neuer Artikel</button>
+      <button class="a-tab" onclick="switchAdminTab('watchlist',this)">Watchlist</button>
     </div>
     <div class="admin-body">
-
-      <!-- ARTICLES LIST -->
-      <div class="a-sec active" id="tab-articles">
-        <div id="admin-articles-list"></div>
-      </div>
-
-      <!-- NEW / EDIT ARTICLE -->
+      <div class="a-sec active" id="tab-articles"><div id="admin-articles-list"></div></div>
       <div class="a-sec" id="tab-new-article">
         <div class="ok-msg" id="art-ok">✓ Artikel gespeichert</div>
         <input type="hidden" id="edit-id">
-        <div class="fg"><label>Titel</label><input type="text" id="a-title" placeholder="z.B. NVIDIA Q4: Die Zahlen hinter dem Hype"></div>
-        <div class="fg"><label>Kategorie</label>
-          <select id="a-cat">
-            <option>Quartalszahlen</option><option>Aktienidee</option>
-            <option>Marktgedanke</option><option>Chart</option><option>Makro</option>
-          </select>
+        <div class="fga"><label>Titel</label><input type="text" id="a-title" placeholder="Artikeltitel"></div>
+        <div class="fga"><label>Kategorie</label>
+          <select id="a-cat"><option>Quartalszahlen</option><option>Aktienidee</option><option>Marktgedanke</option><option>Chart</option><option>Makro</option></select>
         </div>
-        <div class="fg"><label>Vorschautext (2–3 Sätze)</label><textarea id="a-excerpt" style="min-height:80px;" placeholder="Kurze Zusammenfassung die neugierig macht..."></textarea></div>
-        <div class="fg">
-          <label>Artikeltext</label>
-          <textarea id="a-content" placeholder="Schreibe hier deinen vollständigen Artikel.&#10;&#10;## So machst du eine Zwischenüberschrift&#10;> So machst du ein Zitat&#10;&#10;Einfach leer Zeile lassen für neuen Absatz."></textarea>
-          <p class="hint">Formatierung: <strong>## Text</strong> = Überschrift &nbsp;|&nbsp; <strong>&gt; Text</strong> = Zitat-Block &nbsp;|&nbsp; Leerzeile = neuer Absatz</p>
+        <div class="fga"><label>Vorschautext</label><textarea id="a-excerpt" style="min-height:75px;" placeholder="2–3 Sätze Vorschau…"></textarea></div>
+        <div class="fga"><label>Artikeltext</label><textarea id="a-content" placeholder="## Überschrift&#10;> Zitat&#10;&#10;Leerzeile = neuer Absatz"></textarea>
+          <p class="hint">## Text = Überschrift &nbsp;|&nbsp; > Text = Zitat</p>
         </div>
-        <div class="fg">
-          <label class="ft-toggle">
-            <input type="checkbox" id="a-featured">
-            <span>Als Hauptartikel oben anzeigen (ersetzt bisherigen Hauptartikel)</span>
-          </label>
-        </div>
-        <div style="display:flex;gap:.7rem;margin-top:.5rem;">
-          <button class="btn-p" onclick="saveArticle()">Artikel speichern</button>
-          <button class="btn-s" onclick="resetArticleForm()">Neuen Artikel</button>
-        </div>
+        <div class="fga"><label class="ft-toggle"><input type="checkbox" id="a-featured"><span>Als Hauptartikel anzeigen</span></label></div>
+        <div style="display:flex;gap:.7rem;"><button class="btn-pa" onclick="saveArticle()">Speichern</button><button class="btn-sa" onclick="resetArticleForm()">Neu</button></div>
       </div>
-
-      <!-- WATCHLIST ADMIN -->
       <div class="a-sec" id="tab-watchlist">
         <div class="ok-msg" id="wl-ok">✓ Watchlist gespeichert</div>
-        <p class="hint" style="margin-bottom:1rem;">Symbole werden automatisch über Yahoo Finance abgerufen. Trage den Ticker-Symbol ein (z.B. AAPL, NVDA, SAP.DE, BRK-B).</p>
+        <p class="hint" style="margin-bottom:1rem;">Ticker-Symbol (z.B. AAPL, NVDA, SAP.DE)</p>
         <div id="wla-list"></div>
         <hr class="div">
-        <p style="font-size:.8rem;color:var(--ink-muted);margin-bottom:.8rem;">Neue Aktie hinzufügen:</p>
-        <div class="add-row">
-          <div class="fg"><label>Ticker</label><input type="text" id="new-tick" placeholder="AAPL" style="text-transform:uppercase;"></div>
-          <div class="fg"><label>Anzeigename</label><input type="text" id="new-co" placeholder="Apple Inc."></div>
-          <div class="fg" style="grid-column:span 2;"><label>&nbsp;</label>
-            <button class="btn-p" onclick="addWatchlistItem()" style="width:100%;margin-top:0;">Hinzufügen</button>
-          </div>
+        <div style="display:grid;grid-template-columns:100px 1fr auto;gap:.6rem;align-items:end;margin-top:.5rem;">
+          <div class="fga"><label>Ticker</label><input type="text" id="new-tick" placeholder="AAPL" style="text-transform:uppercase;"></div>
+          <div class="fga"><label>Name</label><input type="text" id="new-co" placeholder="Apple Inc."></div>
+          <button class="btn-pa" onclick="addWatchlistItem()" style="margin-top:1.5rem;padding:.65rem .9rem;">+</button>
         </div>
-        <br>
-        <button class="btn-p" onclick="saveWatchlist()">Watchlist speichern & Kurse laden</button>
+        <br><button class="btn-pa" onclick="saveWatchlist()">Speichern & laden</button>
       </div>
-
-      <!-- EARNINGS -->
-      <div class="a-sec" id="tab-earnings">
-        <div class="ok-msg" id="earn-ok">✓ Earnings gespeichert</div>
-        <div id="earn-admin-list"></div>
-        <hr class="div">
-        <p style="font-size:.8rem;color:var(--ink-muted);margin-bottom:.8rem;">Neuer Eintrag:</p>
-        <div style="display:grid;grid-template-columns:60px 60px 1fr 1fr 80px;gap:.6rem;align-items:end;">
-          <div class="fg"><label>Tag</label><input type="text" id="ne-day" placeholder="06"></div>
-          <div class="fg"><label>Monat</label><input type="text" id="ne-mo" placeholder="Mär"></div>
-          <div class="fg"><label>Unternehmen</label><input type="text" id="ne-co" placeholder="Apple"></div>
-          <div class="fg"><label>Zeitpunkt</label><input type="text" id="ne-time" placeholder="Nach Börsenschluss"></div>
-          <div class="fg"><label>EPS est.</label><input type="text" id="ne-eps" placeholder="$1.20"></div>
-        </div>
-        <button class="btn-p" onclick="addEarnings()" style="margin-bottom:1rem;">Hinzufügen</button>
-        <br><br>
-        <button class="btn-p" onclick="saveEarnings()">Earnings speichern</button>
-      </div>
-
     </div>
   </div>
 </div>
 
-<!-- FOOTER -->
 <footer>
   <div class="ft-inner">
     <div>
@@ -481,264 +390,140 @@ footer{border-top:1px solid var(--rule);margin-top:2rem;}
     </div>
     <div class="ft-r">© 2025 Kapitalwerk<br>Keine Anlageberatung. Kurse 15 Min. verzögert.</div>
   </div>
-  <div class="ft-disc"><strong>Haftungsausschluss:</strong> Alle Inhalte dienen ausschließlich zu Informationszwecken und stellen keine Anlageberatung dar. Investitionen in Wertpapiere sind mit Risiken verbunden. Kursdaten werden mit 15 Minuten Verzögerung angezeigt.</div>
+  <div class="ft-disc"><strong>Haftungsausschluss:</strong> Alle Inhalte dienen ausschließlich Informationszwecken und stellen keine Anlageberatung dar.</div>
 </footer>
 
 <script>
-// ════════════════════════════════════════
-//  CONFIG — ÄNDERE NUR HIER
-// ════════════════════════════════════════
-const ADMIN_PASSWORD = 'Molly1997';
+const SUPABASE_URL = 'https://fncwjdfpnrhsuplbgomn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuY3dqZGZwbnJoc3VwbGJnb21uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MzczOTUsImV4cCI6MjA4ODQxMzM5NX0.A7wHYv-GsCV-ZUBHtgI9nWncbZm88d9TDLlNmoQxMzw';
+const ADMIN_EMAIL  = 'raphael.buecker@gmail.com';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ════════════════════════════════════════
-//  STORAGE
-// ════════════════════════════════════════
-const SK = { articles:'kw2_articles', watchlist:'kw2_watchlist', earnings:'kw2_earnings', session:'kw2_session' };
-
-function load(k){ try{ const d=localStorage.getItem(k); return d?JSON.parse(d):null; }catch(e){ return null; } }
-function persist(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){ console.warn('Storage error',e); } }
-
-// ════════════════════════════════════════
-//  DEFAULT DATA
-// ════════════════════════════════════════
-const DEF_ARTICLES = [
-  { id:1, title:'NVIDIA Q4 2024: Die Zahlen hinter dem Hype — und was sie wirklich bedeuten',
-    category:'Quartalszahlen', date:'3. März 2025', featured:true,
-    excerpt:'$39,3 Mrd. Umsatz. +78% YoY. Die Headline ist bekannt. Aber wer zwischen den Zeilen liest, findet ein interessantes Bild: erste Zeichen einer Normalisierung in den Margen.',
-    content:'## Die Zahlen im Überblick\n\nNVIDIA hat wieder geliefert. $39,3 Mrd. Umsatz im vierten Quartal, ein Wachstum von 78% gegenüber dem Vorjahr. Die Datacenter-Sparte macht inzwischen über 91% des Gesamtumsatzes aus.\n\n## Was hinter den Zahlen steckt\n\n> Der Markt bewertet nicht die Gegenwart — er kauft eine Erwartung über die nächsten 12 Monate.\n\nInteressant ist der Blick auf die Gross Margin. Mit 73,5% liegt sie leicht unter dem Rekordhoch. Die Blackwell-Architektur läuft noch nicht auf vollen Touren.\n\n## Was das für Investoren bedeutet\n\nNVIDIA wird weiterhin von zwei Tailwinds getragen: Der KI-Infrastruktur-Boom und der Übergang von CPU- zu GPU-Computing. Solange die großen Hyperscaler ihre CapEx-Pläne nicht kürzen, bleibt NVIDIA der klare Hauptprofiteur.' },
-  { id:2, title:'Warum ich ASML für eine der interessantesten europäischen Positionen halte',
-    category:'Aktienidee', date:'28. Februar 2025', featured:false,
-    excerpt:'Das Monopol auf EUV-Lithografie ist real. Die Frage ist nicht ob, sondern wann der nächste Chip-Zyklus dreht.',
-    content:'## Ein echtes Monopol\n\nEs gibt wenige Unternehmen auf der Welt, die ein echtes technologisches Monopol besitzen. ASML ist eines davon.\n\n> Eine EUV-Maschine kostet über 150 Millionen Euro. Und die Kunden stehen Schlange.\n\n## Risiken nicht vergessen\n\nChina-Exposure ist das größte Risiko. Die Exportbeschränkungen treffen ASML empfindlich. Dennoch: Wer langfristig denkt, kauft ASML bei Schwäche.' },
-  { id:3, title:'Was der Bond-Markt gerade wirklich signalisiert',
-    category:'Marktgedanke', date:'24. Februar 2025', featured:false,
-    excerpt:'Während alle auf Powell schauen, erzählt die Zinskurve eine andere Geschichte.',
-    content:'## Was die Zinskurve sagt\n\nDie Zinskurve ist seit über zwei Jahren invertiert. Normalerweise ein verlässliches Rezessionssignal — doch die Wirtschaft läuft weiter.\n\n> Der Anleihemarkt hat bisher immer recht behalten. Er braucht manchmal nur mehr Geduld.\n\n## Meine Einschätzung\n\nDie Fed ist in einer Zwickmühle. Zu früh senken riskiert eine Inflation-Rückkehr, zu spät senken würgt die Wirtschaft ab.' }
+let currentUser = null;
+let currentProfile = null;
+let isAdmin = false;
+let favorites = [];
+let watchlist = JSON.parse(localStorage.getItem('kw_watchlist') || 'null') || [
+  {ticker:'NVDA',company:'NVIDIA'},
+  {ticker:'ASML',company:'ASML Holding'},
+  {ticker:'BRK-B',company:'Berkshire Hathaway'},
+  {ticker:'SAP',company:'SAP SE'}
 ];
 
-const DEF_WATCHLIST = [
-  { ticker:'NVDA', company:'NVIDIA Corp.' },
-  { ticker:'ASML', company:'ASML Holding' },
-  { ticker:'BRK-B', company:'Berkshire Hathaway' },
-  { ticker:'SAP', company:'SAP SE' }
-];
+// AUTH STATE
+sb.auth.onAuthStateChange(async (event, session) => {
+  currentUser = session?.user || null;
+  isAdmin = currentUser?.email === ADMIN_EMAIL;
+  if (currentUser) { await loadProfile(); await loadFavorites(); }
+  else { currentProfile = null; favorites = []; }
+  updateUserTrigger();
+  renderFeed();
+  renderBlog();
+});
 
-const DEF_EARNINGS = [
-  { day:'06', month:'Mär', company:'CrowdStrike', time:'Nach Börsenschluss', eps:'$0.84' },
-  { day:'12', month:'Mär', company:'Adobe', time:'Nach Börsenschluss', eps:'$4.97' },
-  { day:'20', month:'Mär', company:'Nike', time:'Nach Börsenschluss', eps:'$0.29' }
-];
-
-// ════════════════════════════════════════
-//  STATE
-// ════════════════════════════════════════
-let articles  = load(SK.articles)  || DEF_ARTICLES;
-let watchlist = load(SK.watchlist) || DEF_WATCHLIST;
-let earnings  = load(SK.earnings)  || DEF_EARNINGS;
-let isAdmin   = sessionStorage.getItem(SK.session) === 'yes';
-
-// ════════════════════════════════════════
-//  MARKTDATEN — via stooq (zuverlässig, kostenlos)
-// ════════════════════════════════════════
-const HERO_SYMBOLS = [
-  { sym: '^spx',    label: 'S&P 500',  eur: false },
-  { sym: '^dax',    label: 'DAX',      eur: true  },
-  { sym: '^ndq',    label: 'NASDAQ',   eur: false },
-  { sym: 'eurusd',  label: 'EUR/USD',  eur: false },
-  { sym: 'xauusd',  label: 'Gold',     eur: false }
-];
-
-async function fetchStooq(sym) {
-  try {
-    const url = `https://stooq.com/q/l/?s=${sym}&f=sd2t2ohlcv&h&e=json`;
-    const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
-    const data = await res.json();
-    const q = data?.symbols?.[0];
-    if (!q || !q.Close) return null;
-    const close = parseFloat(q.Close);
-    const open = parseFloat(q.Open);
-    const chgPct = ((close - open) / open) * 100;
-    return { price: close, changePct: chgPct };
-  } catch(e) { return null; }
+async function loadProfile() {
+  if (!currentUser) return;
+  const {data} = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+  currentProfile = data;
 }
 
-function fmtPrice(p, isEur) {
-  if (!p) return '—';
-  const sym = isEur ? '€' : '';
-  if (p > 1000) return sym + p.toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2});
-  if (p > 10)   return sym + p.toFixed(2);
-  return sym + p.toFixed(4);
+async function loadFavorites() {
+  if (!currentUser) { favorites = []; return; }
+  const {data} = await sb.from('favorites').select('article_id').eq('user_id', currentUser.id);
+  favorites = (data||[]).map(f=>f.article_id);
 }
 
-function fmtPct(pct) {
-  if (pct === null || pct === undefined) return '—';
-  return (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pw = document.getElementById('login-pw').value;
+  const btn = document.getElementById('login-btn');
+  const err = document.getElementById('login-err');
+  const ok  = document.getElementById('login-ok');
+  err.style.display='none'; ok.style.display='none';
+  btn.disabled=true; btn.textContent='Einloggen…';
+  const {error} = await sb.auth.signInWithPassword({email, password:pw});
+  btn.disabled=false; btn.textContent='Einloggen';
+  if (error) { err.textContent='E-Mail oder Passwort falsch.'; err.style.display='block'; return; }
+  closeAuthModal();
+  if (email===ADMIN_EMAIL) { setTimeout(openAdmin, 300); }
 }
 
-// Statische Fallback-Daten falls API nicht erreichbar
-const FALLBACK_TICKER = [
-  {label:'S&P 500', val:'6.831',  chg:'-0,56%', dir:'down'},
-  {label:'DAX',     val:'23.808', chg:'-0,03%', dir:'down'},
-  {label:'NASDAQ',  val:'22.749', chg:'-0,26%', dir:'down'},
-  {label:'EUR/USD', val:'1,0834', chg:'+0,15%', dir:'up'},
-  {label:'Gold',    val:'5.097',  chg:'+0,35%', dir:'up'}
-];
-
-async function loadHeroTicker() {
-  const el = document.getElementById('ticker-display');
-  if (!el) return;
-
-  // Zeige erst Fallback sofort, dann lade echte Daten
-  el.innerHTML = FALLBACK_TICKER.map(t => `
-    <div class="ticker-row">
-      <span class="ticker-name">${t.label}</span>
-      <span class="ticker-val">${t.val}</span>
-      <span class="ticker-chg ${t.dir}-bg">${t.chg}</span>
-    </div>`).join('');
-
-  // Versuche echte Daten zu laden
-  try {
-    const results = await Promise.allSettled(HERO_SYMBOLS.map(h => fetchStooq(h.sym)));
-    const anySuccess = results.some(r => r.status === 'fulfilled' && r.value);
-    if (!anySuccess) return; // Fallback bleibt
-
-    el.innerHTML = HERO_SYMBOLS.map((h, i) => {
-      const q = results[i].status === 'fulfilled' ? results[i].value : null;
-      if (!q) {
-        const fb = FALLBACK_TICKER[i];
-        return `<div class="ticker-row">
-          <span class="ticker-name">${h.label}</span>
-          <span class="ticker-val">${fb.val}</span>
-          <span class="ticker-chg ${fb.dir}-bg">${fb.chg}</span>
-        </div>`;
-      }
-      const dir = q.changePct >= 0 ? 'up' : 'down';
-      return `<div class="ticker-row">
-        <span class="ticker-name">${h.label}</span>
-        <span class="ticker-val">${fmtPrice(q.price, h.eur)}</span>
-        <span class="ticker-chg ${dir}-bg">${fmtPct(q.changePct)}</span>
-      </div>`;
-    }).join('');
-  } catch(e) { /* Fallback bleibt */ }
+async function doRegister() {
+  const username = document.getElementById('reg-username').value.trim();
+  const email    = document.getElementById('reg-email').value.trim();
+  const pw       = document.getElementById('reg-pw').value;
+  const btn      = document.getElementById('reg-btn');
+  const err      = document.getElementById('reg-err');
+  const ok       = document.getElementById('reg-ok');
+  err.style.display='none'; ok.style.display='none';
+  if (!username) { err.textContent='Bitte einen Username eingeben.'; err.style.display='block'; return; }
+  if (pw.length < 6) { err.textContent='Passwort muss mindestens 6 Zeichen haben.'; err.style.display='block'; return; }
+  btn.disabled=true; btn.textContent='Registrieren…';
+  const {data, error} = await sb.auth.signUp({email, password:pw});
+  if (error) { err.textContent=error.message; err.style.display='block'; btn.disabled=false; btn.textContent='Konto erstellen'; return; }
+  if (data.user) { await sb.from('profiles').upsert({id:data.user.id, username}); }
+  btn.disabled=false; btn.textContent='Konto erstellen';
+  ok.textContent='✓ Konto erstellt! Bitte bestätige deine E-Mail und logge dich dann ein.';
+  ok.style.display='block';
 }
 
-async function loadWatchlistQuotes() {
-  const el = document.getElementById('watchlist-display');
-  if (!el) return;
-  if (!watchlist.length) {
-    el.innerHTML = '<p style="font-size:.82rem;color:var(--ink-muted);">Keine Aktien in der Watchlist.</p>';
-    return;
+async function doLogout() {
+  await sb.auth.signOut();
+  closeUserMenu();
+}
+
+// USER MENU
+function updateUserTrigger() {
+  document.getElementById('user-trigger').classList.toggle('logged-in', !!currentUser);
+}
+
+function toggleUserMenu() {
+  const p = document.getElementById('user-menu-panel');
+  if (p.classList.contains('open')) { closeUserMenu(); return; }
+  renderUserMenu(); p.classList.add('open');
+}
+
+function closeUserMenu() { document.getElementById('user-menu-panel').classList.remove('open'); }
+
+function renderUserMenu() {
+  const el = document.getElementById('user-menu-content');
+  if (!currentUser) {
+    el.innerHTML = `
+      <button class="umenu-item" onclick="openAuthModal('login');closeUserMenu()">Einloggen</button>
+      <button class="umenu-item" onclick="openAuthModal('register');closeUserMenu()">Registrieren</button>`;
+  } else if (isAdmin) {
+    el.innerHTML = `
+      <div class="umenu-user"><div class="umenu-username">Admin ⚙</div><div class="umenu-email">${currentUser.email}</div></div>
+      <button class="umenu-item" onclick="openAdmin();closeUserMenu()">Admin-Panel öffnen</button>
+      <hr class="umenu-divider">
+      <button class="umenu-item" onclick="doLogout()" style="color:#c0392b;">Ausloggen</button>`;
+  } else {
+    el.innerHTML = `
+      <div class="umenu-user"><div class="umenu-username">${currentProfile?.username||'User'}</div><div class="umenu-email">${currentUser.email}</div></div>
+      <button class="umenu-item" onclick="showPage('favorites');closeUserMenu()">★ Meine Favoriten</button>
+      <hr class="umenu-divider">
+      <button class="umenu-item" onclick="doLogout()" style="color:#c0392b;">Ausloggen</button>`;
   }
-  // Zeige erst Platzhalter
-  el.innerHTML = watchlist.map(w => `
-    <div class="wl-item">
-      <div><div class="wl-tick">${w.ticker}</div><div class="wl-co">${w.company}</div></div>
-      <div><div class="wl-price">—</div><div class="wl-pct">—</div></div>
-    </div>`).join('');
-
-  // Lade Kurse
-  const results = await Promise.allSettled(watchlist.map(w => {
-    const sym = w.ticker.toLowerCase().replace('-','.');
-    return fetchStooq(sym);
-  }));
-
-  el.innerHTML = watchlist.map((w, i) => {
-    const q = results[i].status === 'fulfilled' ? results[i].value : null;
-    const isEur = w.ticker.endsWith('.DE') || w.ticker.endsWith('.AS');
-    const dir = q ? (q.changePct >= 0 ? 'up' : 'down') : 'up';
-    return `<div class="wl-item">
-      <div><div class="wl-tick">${w.ticker}</div><div class="wl-co">${w.company}</div></div>
-      <div>
-        <div class="wl-price">${q ? fmtPrice(q.price, isEur) : '—'}</div>
-        <div class="wl-pct ${dir}">${q ? fmtPct(q.changePct) : '—'}</div>
-      </div>
-    </div>`;
-  }).join('');
 }
 
-
-// ════════════════════════════════════════
-//  RENDER FEED
-// ════════════════════════════════════════
-function renderFeed() {
-  const el = document.getElementById('post-feed');
-  if (!articles.length) { el.innerHTML = '<p class="empty-state">Noch keine Artikel vorhanden.</p>'; return; }
-  const featured = articles.find(a=>a.featured);
-  const rest = articles.filter(a=>!a.featured);
-  let html = '';
-  if (featured) {
-    html += `<article class="post-featured">
-      <div class="pmeta">
-        <span class="tag">${featured.category}</span>
-        <span class="pdate">${featured.date}</span>
-        <span class="f-badge">⬡ Leitartikel</span>
-      </div>
-      <h2><a onclick="openArticle(${featured.id});return false;" href="#">${featured.title}</a></h2>
-      <p class="pexcerpt">${featured.excerpt}</p>
-      <button class="btn-read" onclick="openArticle(${featured.id})">Weiterlesen →</button>
-    </article>`;
-  }
-  if (rest.length) {
-    html += rest.map((a,i)=>`
-      <article class="post-item" style="animation-delay:${.1+i*.07}s">
-        <div class="pmeta">
-          <span class="tag tag-o">${a.category}</span>
-          <span class="pdate">${a.date}</span>
-        </div>
-        <h3><a onclick="openArticle(${a.id});return false;" href="#">${a.title}</a></h3>
-        <p class="pexcerpt">${a.excerpt}</p>
-        <button class="btn-read" onclick="openArticle(${a.id})" style="margin-top:.4rem;">Weiterlesen →</button>
-      </article>`).join('');
-  }
-  el.innerHTML = html;
+// AUTH MODAL
+function openAuthModal(tab='login') {
+  document.getElementById('auth-modal').classList.add('open');
+  switchAuthTab(tab);
+}
+function closeAuthModal() { document.getElementById('auth-modal').classList.remove('open'); }
+function switchAuthTab(name) {
+  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.auth-sec').forEach(s=>s.classList.remove('active'));
+  document.getElementById('auth-'+name).classList.add('active');
+  document.getElementById('tab-'+name+'-btn').classList.add('active');
 }
 
-function renderEarnings() {
-  const cont = document.querySelector('.sb-sec:nth-child(2)');
-  if (!cont) return;
-  const listEl = cont.querySelector('#earn-display');
-  if (!listEl) return;
-  listEl.innerHTML = earnings.map(e=>`
-    <div class="earn-item">
-      <div class="earn-date"><span class="earn-day">${e.day}</span><span class="earn-mo">${e.month}</span></div>
-      <div><div class="earn-co">${e.company}</div><div class="earn-time">${e.time}</div></div>
-      <div class="earn-eps"><span class="earn-lbl">EPS est.</span>${e.eps}</div>
-    </div>`).join('');
-}
-
-
-// ════════════════════════════════════════
-//  BLOG PAGE
-// ════════════════════════════════════════
-function renderBlog() {
-  const el = document.getElementById('blog-feed');
-  if (!el) return;
-  if (!articles.length) { el.innerHTML = '<p style="padding:3rem 0;color:var(--ink-muted);font-style:italic;">Noch keine Artikel vorhanden.</p>'; return; }
-  const sorted = [...articles].sort((a,b) => b.id - a.id);
-  el.innerHTML = sorted.map((a,i) => `
-    <article class="blog-article" style="animation-delay:${i*0.07}s">
-      <div class="pmeta">
-        <span class="tag">${a.category}</span>
-        <span class="pdate">${a.date}</span>
-        ${a.featured ? '<span class="f-badge">⬡ Leitartikel</span>' : ''}
-      </div>
-      <h2>${a.title}</h2>
-      <div class="blog-divider"><span>Lektüre</span></div>
-      <div class="blog-article-body">${parseContent(a.content || a.excerpt)}</div>
-    </article>`).join('');
-}
-
-// ════════════════════════════════════════
-//  ARTICLE VIEW
-// ════════════════════════════════════════
-function openArticle(id) {
-  const a = articles.find(x=>x.id===id);
-  if (!a) return;
-  document.getElementById('art-title').textContent = a.title;
-  document.getElementById('art-meta').innerHTML = `<span class="tag">${a.category}</span><span class="pdate">${a.date}</span>`;
-  document.getElementById('art-body').innerHTML = parseContent(a.content);
-  showPage('article');
-  window.scrollTo({top:0,behavior:'smooth'});
+// ARTICLES
+async function fetchArticles() {
+  const {data,error} = await sb.from('articles').select('*').order('created_at',{ascending:false});
+  if (error) { console.error(error); return []; }
+  return data||[];
 }
 
 function parseContent(text) {
@@ -746,261 +531,263 @@ function parseContent(text) {
   return text.split('\n').map(line=>{
     if (line.startsWith('## ')) return `<h2>${line.slice(3)}</h2>`;
     if (line.startsWith('> '))  return `<blockquote>${line.slice(2)}</blockquote>`;
-    if (line.trim() === '')     return '';
+    if (line.trim()==='') return '';
     return `<p>${line}</p>`;
   }).filter(Boolean).join('');
 }
 
-// ════════════════════════════════════════
-//  PAGE NAV
-// ════════════════════════════════════════
-function showPage(name) {
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  const pg = document.getElementById('page-'+name);
-  if (pg) pg.classList.add('active');
-  if (name === 'blog') renderBlog();
-  window.scrollTo({top:0,behavior:'smooth'});
+function formatDate(iso) {
+  return new Date(iso).toLocaleDateString('de-DE',{day:'numeric',month:'long',year:'numeric'});
 }
 
-// ════════════════════════════════════════
-//  LOGIN / AUTH
-// ════════════════════════════════════════
-function promptLogin() {
-  if (isAdmin) { openAdmin(); return; }
-  document.getElementById('login-overlay').classList.add('open');
-  setTimeout(()=>document.getElementById('pw-input').focus(), 100);
+function favBtn(articleId) {
+  if (!currentUser || isAdmin) return '';
+  const isFav = favorites.includes(articleId);
+  return `<button class="fav-btn ${isFav?'active':''}" onclick="toggleFav(${articleId},this)">${isFav?'★ Gespeichert':'☆ Favorit'}</button>`;
 }
 
-function closeLogin() {
-  document.getElementById('login-overlay').classList.remove('open');
-  document.getElementById('pw-input').value = '';
-  document.getElementById('login-err').style.display = 'none';
-}
-
-function checkLogin() {
-  const pw = document.getElementById('pw-input').value;
-  if (pw === ADMIN_PASSWORD) {
-    isAdmin = true;
-    sessionStorage.setItem(SK.session, 'yes');
-    closeLogin();
-    openAdmin();
+async function toggleFav(articleId, btn) {
+  if (!currentUser) { openAuthModal(); return; }
+  const isFav = favorites.includes(articleId);
+  if (isFav) {
+    await sb.from('favorites').delete().eq('user_id',currentUser.id).eq('article_id',articleId);
+    favorites = favorites.filter(f=>f!==articleId);
+    btn.className='fav-btn'; btn.innerHTML='☆ Favorit';
   } else {
-    const err = document.getElementById('login-err');
-    err.style.display = 'block';
-    document.getElementById('pw-input').value = '';
-    document.getElementById('pw-input').focus();
-    setTimeout(()=>err.style.display='none', 2500);
+    await sb.from('favorites').insert({user_id:currentUser.id,article_id:articleId});
+    favorites.push(articleId);
+    btn.className='fav-btn active'; btn.innerHTML='★ Gespeichert';
   }
 }
 
-function logout() {
-  isAdmin = false;
-  sessionStorage.removeItem(SK.session);
-  closeAdmin();
+// RENDER FEED
+async function renderFeed() {
+  const el = document.getElementById('post-feed');
+  if (!el) return;
+  const articles = await fetchArticles();
+  if (!articles.length) { el.innerHTML='<p class="empty-state">Noch keine Artikel.</p>'; return; }
+  const featured = articles.find(a=>a.featured);
+  const rest = articles.filter(a=>!a.featured);
+  let html='';
+  if (featured) html+=`<article class="post-featured">
+    <div class="pmeta"><span class="tag">${featured.category}</span><span class="pdate">${formatDate(featured.created_at)}</span><span class="f-badge">⬡ Leitartikel</span>${favBtn(featured.id)}</div>
+    <h2><a onclick="openArticle(${featured.id});return false;" href="#">${featured.title}</a></h2>
+    <p class="pexcerpt">${featured.excerpt||''}</p>
+    <button class="btn-read" onclick="openArticle(${featured.id})">Weiterlesen →</button>
+  </article>`;
+  html += rest.map((a,i)=>`<article class="post-item" style="animation-delay:${.1+i*.07}s">
+    <div class="pmeta"><span class="tag tag-o">${a.category}</span><span class="pdate">${formatDate(a.created_at)}</span>${favBtn(a.id)}</div>
+    <h3><a onclick="openArticle(${a.id});return false;" href="#">${a.title}</a></h3>
+    <p class="pexcerpt">${a.excerpt||''}</p>
+    <button class="btn-read" onclick="openArticle(${a.id})" style="margin-top:.4rem;">Weiterlesen →</button>
+  </article>`).join('');
+  el.innerHTML = html;
 }
 
-// ════════════════════════════════════════
-//  ADMIN PANEL
-// ════════════════════════════════════════
-function openAdmin() {
-  if (!isAdmin) { promptLogin(); return; }
-  document.getElementById('admin-panel').classList.add('open');
-  renderAdminArticles();
-  renderAdminWatchlist();
-  renderAdminEarnings();
+// RENDER BLOG
+async function renderBlog() {
+  const el = document.getElementById('blog-feed');
+  if (!el) return;
+  const articles = await fetchArticles();
+  if (!articles.length) { el.innerHTML='<p class="empty-state">Noch keine Artikel.</p>'; return; }
+  el.innerHTML = articles.map((a,i)=>`<article class="blog-article" style="animation-delay:${i*.07}s">
+    <div class="pmeta"><span class="tag">${a.category}</span><span class="pdate">${formatDate(a.created_at)}</span>${a.featured?'<span class="f-badge">⬡ Leitartikel</span>':''}${favBtn(a.id)}</div>
+    <h2>${a.title}</h2>
+    <div class="blog-divider"><span>Lektüre</span></div>
+    <div class="blog-article-body">${parseContent(a.content||a.excerpt)}</div>
+  </article>`).join('');
 }
 
+// OPEN ARTICLE
+async function openArticle(id) {
+  const {data:a} = await sb.from('articles').select('*').eq('id',id).single();
+  if (!a) return;
+  document.getElementById('art-title').textContent = a.title;
+  document.getElementById('art-meta').innerHTML = `<span class="tag">${a.category}</span><span class="pdate">${formatDate(a.created_at)}</span>${favBtn(a.id)}`;
+  document.getElementById('art-body').innerHTML = parseContent(a.content);
+  showPage('article');
+}
+
+// FAVORITES PAGE
+async function renderFavorites() {
+  const el = document.getElementById('favorites-feed');
+  if (!currentUser) { el.innerHTML='<p class="empty-state">Bitte einloggen um Favoriten zu sehen.</p>'; return; }
+  await loadFavorites();
+  if (!favorites.length) { el.innerHTML='<p class="empty-state">Noch keine Favoriten gespeichert.</p>'; return; }
+  const {data:articles} = await sb.from('articles').select('*').in('id',favorites);
+  if (!articles?.length) { el.innerHTML='<p class="empty-state">Keine Artikel gefunden.</p>'; return; }
+  el.innerHTML = articles.map((a,i)=>`<article class="post-item" style="animation-delay:${i*.07}s">
+    <div class="pmeta"><span class="tag tag-o">${a.category}</span><span class="pdate">${formatDate(a.created_at)}</span>${favBtn(a.id)}</div>
+    <h3><a onclick="openArticle(${a.id});return false;" href="#">${a.title}</a></h3>
+    <p class="pexcerpt">${a.excerpt||''}</p>
+  </article>`).join('');
+}
+
+// PAGE NAV
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name)?.classList.add('active');
+  if (name==='blog') renderBlog();
+  if (name==='favorites') renderFavorites();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ADMIN
+function openAdmin() { if (!isAdmin) return; document.getElementById('admin-panel').classList.add('open'); renderAdminArticles(); renderAdminWatchlist(); }
 function closeAdmin() { document.getElementById('admin-panel').classList.remove('open'); }
 
-function switchTab(name, btn) {
+function switchAdminTab(name, btn) {
   document.querySelectorAll('.a-tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.a-sec').forEach(s=>s.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  const sec = document.getElementById('tab-'+name);
-  if (sec) sec.classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
 }
 
-// ── ARTICLES ADMIN ──
-function renderAdminArticles() {
+async function renderAdminArticles() {
   const el = document.getElementById('admin-articles-list');
+  const articles = await fetchArticles();
   if (!articles.length) { el.innerHTML='<p style="color:var(--ink-muted);font-size:.85rem;padding:1rem 0;">Noch keine Artikel.</p>'; return; }
-  el.innerHTML = articles.map(a=>`
-    <div class="ali">
-      <div class="ali-meta">
-        <div class="ali-title">${a.title}</div>
-        <div class="ali-info">${a.category} · ${a.date}${a.featured?' · ⬡ Leitartikel':''}</div>
-      </div>
-      <div class="ali-actions">
-        <button class="btn-s" onclick="editArticle(${a.id})">Bearbeiten</button>
-        <button class="btn-d" onclick="deleteArticle(${a.id})">Löschen</button>
-      </div>
-    </div>`).join('');
+  el.innerHTML = articles.map(a=>`<div class="ali">
+    <div class="ali-meta"><div class="ali-title">${a.title}</div><div class="ali-info">${a.category} · ${formatDate(a.created_at)}${a.featured?' · ⬡ Leitartikel':''}</div></div>
+    <div class="ali-actions"><button class="btn-sa" onclick="editArticle(${a.id})">Bearbeiten</button><button class="btn-da" onclick="deleteArticle(${a.id})">Löschen</button></div>
+  </div>`).join('');
 }
 
-function editArticle(id) {
-  const a = articles.find(x=>x.id===id);
+async function editArticle(id) {
+  const {data:a} = await sb.from('articles').select('*').eq('id',id).single();
   if (!a) return;
-  document.getElementById('edit-id').value = a.id;
-  document.getElementById('a-title').value = a.title;
-  document.getElementById('a-cat').value = a.category;
-  document.getElementById('a-excerpt').value = a.excerpt;
-  document.getElementById('a-content').value = a.content;
-  document.getElementById('a-featured').checked = a.featured;
-  // Go to edit tab
+  document.getElementById('edit-id').value=a.id;
+  document.getElementById('a-title').value=a.title;
+  document.getElementById('a-cat').value=a.category;
+  document.getElementById('a-excerpt').value=a.excerpt||'';
+  document.getElementById('a-content').value=a.content||'';
+  document.getElementById('a-featured').checked=a.featured;
   document.querySelectorAll('.a-tab').forEach((t,i)=>t.classList.toggle('active',i===1));
   document.querySelectorAll('.a-sec').forEach((s,i)=>s.classList.toggle('active',i===1));
 }
 
-function deleteArticle(id) {
+async function deleteArticle(id) {
   if (!confirm('Artikel wirklich löschen?')) return;
-  articles = articles.filter(a=>a.id!==id);
-  persist(SK.articles, articles);
-  renderAdminArticles();
-  renderFeed();
-  renderBlog();
+  await sb.from('articles').delete().eq('id',id);
+  renderAdminArticles(); renderFeed(); renderBlog();
 }
 
-function saveArticle() {
-  const id = parseInt(document.getElementById('edit-id').value)||0;
+async function saveArticle() {
+  const id = document.getElementById('edit-id').value;
   const isFeatured = document.getElementById('a-featured').checked;
-  if (isFeatured) articles.forEach(a=>a.featured=false);
-  const now = new Date();
-  const dateStr = now.toLocaleDateString('de-DE',{day:'numeric',month:'long',year:'numeric'});
-  const a = {
-    id: id || Date.now(),
-    title: document.getElementById('a-title').value.trim() || 'Ohne Titel',
+  if (isFeatured) await sb.from('articles').update({featured:false}).neq('id',id||0);
+  const data = {
+    title: document.getElementById('a-title').value.trim()||'Ohne Titel',
     category: document.getElementById('a-cat').value,
-    date: dateStr,
     featured: isFeatured,
     excerpt: document.getElementById('a-excerpt').value.trim(),
     content: document.getElementById('a-content').value.trim()
   };
-  if (id) {
-    const idx = articles.findIndex(x=>x.id===id);
-    if (idx > -1) articles[idx] = a; else articles.unshift(a);
-  } else {
-    articles.unshift(a);
-  }
-  persist(SK.articles, articles);
-  renderFeed();
-  renderBlog();
-  renderAdminArticles();
-  showOk('art-ok');
-  resetArticleForm();
+  if (id) { await sb.from('articles').update(data).eq('id',id); }
+  else { await sb.from('articles').insert(data); }
+  const ok=document.getElementById('art-ok');
+  ok.style.display='block'; setTimeout(()=>ok.style.display='none',2500);
+  resetArticleForm(); renderAdminArticles(); renderFeed(); renderBlog();
 }
 
 function resetArticleForm() {
-  document.getElementById('edit-id').value='';
-  document.getElementById('a-title').value='';
-  document.getElementById('a-excerpt').value='';
-  document.getElementById('a-content').value='';
+  ['edit-id','a-title','a-excerpt','a-content'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('a-featured').checked=false;
   document.getElementById('a-cat').value='Quartalszahlen';
 }
 
-// ── WATCHLIST ADMIN ──
+// WATCHLIST
 function renderAdminWatchlist() {
-  const el = document.getElementById('wla-list');
-  el.innerHTML = watchlist.map((w,i)=>`
-    <div class="wla-item">
-      <span class="wla-ticker">${w.ticker}</span>
-      <span class="wla-co">${w.company}</span>
-      <button class="btn-d" onclick="removeWatchlistItem(${i})" style="padding:.25rem .6rem;">✕</button>
-    </div>`).join('');
+  document.getElementById('wla-list').innerHTML = watchlist.map((w,i)=>`<div class="wla-item">
+    <span class="wla-ticker">${w.ticker}</span><span class="wla-co">${w.company}</span>
+    <button class="btn-da" onclick="removeWatchlistItem(${i})" style="padding:.22rem .55rem;">✕</button>
+  </div>`).join('');
 }
-
 function addWatchlistItem() {
-  const t = document.getElementById('new-tick').value.trim().toUpperCase();
-  const c = document.getElementById('new-co').value.trim();
+  const t=document.getElementById('new-tick').value.trim().toUpperCase();
+  const c=document.getElementById('new-co').value.trim();
   if (!t) return;
-  watchlist.push({ ticker:t, company:c||t });
+  watchlist.push({ticker:t,company:c||t});
   document.getElementById('new-tick').value='';
   document.getElementById('new-co').value='';
   renderAdminWatchlist();
 }
-
 function removeWatchlistItem(i) { watchlist.splice(i,1); renderAdminWatchlist(); }
-
 function saveWatchlist() {
-  persist(SK.watchlist, watchlist);
+  localStorage.setItem('kw_watchlist',JSON.stringify(watchlist));
   loadWatchlistQuotes();
-  showOk('wl-ok');
+  const ok=document.getElementById('wl-ok');
+  ok.style.display='block'; setTimeout(()=>ok.style.display='none',2000);
 }
 
-// ── EARNINGS ADMIN ──
-function renderAdminEarnings() {
-  const el = document.getElementById('earn-admin-list');
-  el.innerHTML = earnings.map((e,i)=>`
-    <div class="wla-item">
-      <span style="font-family:var(--mono);font-size:.8rem;min-width:50px;">${e.day} ${e.month}</span>
-      <span class="wla-co">${e.company}</span>
-      <span style="font-size:.75rem;color:var(--ink-muted);min-width:120px;">${e.time}</span>
-      <span style="font-family:var(--mono);font-size:.78rem;">${e.eps}</span>
-      <button class="btn-d" onclick="removeEarnings(${i})" style="padding:.25rem .6rem;">✕</button>
-    </div>`).join('');
+// MARKET DATA
+const HERO_SYMS = [
+  {sym:'^spx',label:'S&P 500',eur:false},{sym:'^dax',label:'DAX',eur:true},
+  {sym:'^ndq',label:'NASDAQ',eur:false},{sym:'eurusd',label:'EUR/USD',eur:false},
+  {sym:'xauusd',label:'Gold',eur:false}
+];
+const FALLBACK = [
+  {label:'S&P 500',val:'6.831',chg:'-0,56%',dir:'down'},{label:'DAX',val:'23.808',chg:'-0,03%',dir:'down'},
+  {label:'NASDAQ',val:'22.749',chg:'-0,26%',dir:'down'},{label:'EUR/USD',val:'1,0834',chg:'+0,15%',dir:'up'},
+  {label:'Gold',val:'2.924',chg:'+0,35%',dir:'up'}
+];
+
+async function fetchStooq(sym) {
+  try {
+    const url=`https://stooq.com/q/l/?s=${sym}&f=sd2t2ohlcv&h&e=json`;
+    const res=await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
+    const data=await res.json();
+    const q=data?.symbols?.[0];
+    if (!q||!q.Close) return null;
+    const close=parseFloat(q.Close),open=parseFloat(q.Open);
+    return {price:close,changePct:((close-open)/open)*100};
+  } catch(e){return null;}
 }
+function fmtP(p,eur){if(!p)return'—';return(eur?'€':'')+(p>10?p.toFixed(2):p.toFixed(4));}
+function fmtC(p){if(p==null)return'—';return(p>=0?'+':'')+p.toFixed(2)+'%';}
 
-function addEarnings() {
-  const e = {
-    day: document.getElementById('ne-day').value.trim(),
-    month: document.getElementById('ne-mo').value.trim(),
-    company: document.getElementById('ne-co').value.trim(),
-    time: document.getElementById('ne-time').value.trim() || 'Nach Börsenschluss',
-    eps: document.getElementById('ne-eps').value.trim() || '—'
-  };
-  if (!e.company) return;
-  earnings.push(e);
-  ['ne-day','ne-mo','ne-co','ne-time','ne-eps'].forEach(id=>document.getElementById(id).value='');
-  renderAdminEarnings();
-}
-
-function removeEarnings(i) { earnings.splice(i,1); renderAdminEarnings(); }
-
-function saveEarnings() {
-  persist(SK.earnings, earnings);
-  renderEarningsSidebar();
-  showOk('earn-ok');
-}
-
-function renderEarningsSidebar() {
-  // Find earnings sidebar by looking for sb-sec with earn-items
-  const all = document.querySelectorAll('.sb-sec');
-  let target = null;
-  all.forEach(s=>{ if(s.querySelector('.earn-item')||s.innerHTML.includes('Earnings')) target=s; });
-  if (!target) return;
-  const old = target.querySelectorAll('.earn-item');
-  old.forEach(e=>e.remove());
-  const div = target.querySelector('.sb-title');
-  earnings.forEach(e=>{
-    const el = document.createElement('div');
-    el.className = 'earn-item';
-    el.innerHTML = `<div class="earn-date"><span class="earn-day">${e.day}</span><span class="earn-mo">${e.month}</span></div>
-      <div><div class="earn-co">${e.company}</div><div class="earn-time">${e.time}</div></div>
-      <div class="earn-eps"><span class="earn-lbl">EPS est.</span>${e.eps}</div>`;
-    target.appendChild(el);
-  });
-}
-
-// ── UTILS ──
-function showOk(id) {
-  const el = document.getElementById(id);
+async function loadHeroTicker() {
+  const el=document.getElementById('ticker-display');
   if (!el) return;
-  el.style.display = 'block';
-  setTimeout(()=>el.style.display='none', 2500);
+  el.innerHTML=FALLBACK.map(t=>`<div class="ticker-row"><span class="ticker-name">${t.label}</span><span class="ticker-val">${t.val}</span><span class="ticker-chg ${t.dir}-bg">${t.chg}</span></div>`).join('');
+  try {
+    const res=await Promise.allSettled(HERO_SYMS.map(h=>fetchStooq(h.sym)));
+    if (res.some(r=>r.status==='fulfilled'&&r.value)) {
+      el.innerHTML=HERO_SYMS.map((h,i)=>{
+        const q=res[i].status==='fulfilled'?res[i].value:null;
+        if (!q){const fb=FALLBACK[i];return`<div class="ticker-row"><span class="ticker-name">${h.label}</span><span class="ticker-val">${fb.val}</span><span class="ticker-chg ${fb.dir}-bg">${fb.chg}</span></div>`;}
+        const d=q.changePct>=0?'up':'down';
+        return`<div class="ticker-row"><span class="ticker-name">${h.label}</span><span class="ticker-val">${fmtP(q.price,h.eur)}</span><span class="ticker-chg ${d}-bg">${fmtC(q.changePct)}</span></div>`;
+      }).join('');
+    }
+  } catch(e){}
 }
 
-// Close panels on backdrop click
-document.getElementById('admin-panel').addEventListener('click', function(e){ if(e.target===this) closeAdmin(); });
-document.getElementById('login-overlay').addEventListener('click', function(e){ if(e.target===this) closeLogin(); });
+async function loadWatchlistQuotes() {
+  const el=document.getElementById('watchlist-display');
+  if (!el||!watchlist.length) return;
+  el.innerHTML=watchlist.map(w=>`<div class="wl-item"><div><div class="wl-tick">${w.ticker}</div><div class="wl-co">${w.company}</div></div><div><div class="wl-price">—</div><div class="wl-pct">—</div></div></div>`).join('');
+  const res=await Promise.allSettled(watchlist.map(w=>fetchStooq(w.ticker.toLowerCase().replace('-','.'))));
+  el.innerHTML=watchlist.map((w,i)=>{
+    const q=res[i].status==='fulfilled'?res[i].value:null;
+    const eur=w.ticker.endsWith('.DE')||w.ticker.endsWith('.AS');
+    const d=q?(q.changePct>=0?'up':'down'):'up';
+    return`<div class="wl-item"><div><div class="wl-tick">${w.ticker}</div><div class="wl-co">${w.company}</div></div><div><div class="wl-price">${q?fmtP(q.price,eur):'—'}</div><div class="wl-pct ${d}">${q?fmtC(q.changePct):'—'}</div></div></div>`;
+  }).join('');
+}
 
-// ════════════════════════════════════════
-//  INIT
-// ════════════════════════════════════════
+// CLOSE ON OUTSIDE CLICK
+document.addEventListener('click',e=>{
+  if (!e.target.closest('#user-menu-panel')&&!e.target.closest('#user-trigger')) closeUserMenu();
+});
+document.getElementById('auth-modal').addEventListener('click',e=>{if(e.target===document.getElementById('auth-modal'))closeAuthModal();});
+document.getElementById('admin-panel').addEventListener('click',e=>{if(e.target===document.getElementById('admin-panel'))closeAdmin();});
+
+// INIT
 renderFeed();
 loadHeroTicker();
 loadWatchlistQuotes();
-// Refresh quotes every 5 minutes
-setInterval(()=>{ loadHeroTicker(); loadWatchlistQuotes(); }, 5 * 60 * 1000);
+setInterval(()=>{loadHeroTicker();loadWatchlistQuotes();},5*60*1000);
 </script>
 </body>
 </html>
