@@ -47,10 +47,10 @@ nav a:hover{color:var(--brg);}nav a:hover::after{width:100%;}
 .live-dot{width:6px;height:6px;border-radius:50%;background:#f0a500;display:inline-block;margin-right:.3rem;animation:pulse 2s infinite;}
 .live-text{font-size:.58rem;color:#f0a500;letter-spacing:.1em;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
-.ticker-row{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--rule);}
-.ticker-name{font-family:var(--mono);font-size:.78rem;color:var(--ink);font-weight:500;}
-.ticker-val{font-family:var(--mono);font-size:.8rem;font-weight:500;}
-.ticker-chg{font-family:var(--mono);font-size:.7rem;padding:.1rem .4rem;border-radius:2px;}
+.ticker-row{display:grid;grid-template-columns:90px 1fr auto;align-items:center;padding:.55rem 0;border-bottom:1px solid var(--rule);gap:.5rem;}
+.ticker-name{font-family:var(--mono);font-size:.76rem;color:var(--ink);font-weight:500;}
+.ticker-val{font-family:var(--mono);font-size:.82rem;font-weight:500;text-align:right;}
+.ticker-chg{font-family:var(--mono);font-size:.69rem;padding:.15rem .45rem;border-radius:2px;text-align:center;min-width:62px;}
 .up{color:var(--brg);}.down{color:#c0392b;}
 .up-bg{background:var(--brg-muted);color:var(--brg);}.down-bg{background:rgba(192,57,43,.08);color:#c0392b;}
 
@@ -215,6 +215,13 @@ hr.div{border:none;border-top:1px solid var(--rule);margin:1.4rem 0;}
 .wla-co{font-size:.8rem;color:var(--ink-soft);flex:1;font-family:var(--sans);}
 .wla-conv{font-size:.72rem;color:var(--ink-muted);font-family:var(--sans);}
 
+.art-body .art-p{font-family:var(--sans);font-size:1.04rem;line-height:1.87;color:var(--ink-soft);margin-bottom:1.4rem;}
+.art-body .art-h2{font-family:var(--serif)!important;font-size:1.55rem;font-weight:500;color:var(--ink);margin:2.5rem 0 .9rem;letter-spacing:-.02em;}
+.art-body .art-bq{font-family:var(--serif);font-style:italic;color:var(--brg);border-left:2px solid var(--brg);padding:.5rem 1.2rem;margin:1.5rem 0;background:var(--brg-muted);}
+.blog-article-body .art-p{font-family:var(--sans);font-size:1.02rem;line-height:1.87;color:var(--ink-soft);margin-bottom:1.3rem;}
+.blog-article-body .art-h2{font-family:var(--serif)!important;font-size:1.45rem;font-weight:500;color:var(--ink);margin:2rem 0 .8rem;}
+.blog-article-body .art-bq{font-family:var(--serif);font-style:italic;color:var(--brg);border-left:2px solid var(--brg);padding:.5rem 1.2rem;margin:1.4rem 0;background:var(--brg-muted);}
+
 /* ── SKELETON ── */
 .skel{background:linear-gradient(90deg,var(--rule) 25%,rgba(44,95,46,0.06) 50%,var(--rule) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:3px;}
 @keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
@@ -259,7 +266,7 @@ footer{border-top:1px solid var(--rule);margin-top:2rem;}
   <section class="hero">
     <div>
       <h1>Märkte lesen.<br><em>Klüger</em> investieren.</h1>
-      <p class="hero-desc">Quartalszahlen, Aktienideen und Marktgedanken — kein Rauschen, keine heißen Tipps. Nur was wirklich interessant ist.</p>
+      <p class="hero-desc">Quartalszahlen, Aktienideen und Marktgedanken — aktuelle Ideen und Gedanken für dein Portfolio.</p>
     </div>
     <div>
       <div class="ticker-label">
@@ -580,11 +587,13 @@ async function fetchArticles() {
 
 function parseContent(text) {
   if (!text) return '';
-  return text.split('\n').map(line => {
-    if (line.startsWith('## ')) return `<h2 style="font-family:var(--serif);font-size:1.5rem;font-weight:500;color:var(--ink);margin:2.2rem 0 .8rem;letter-spacing:-.02em;">${line.slice(3)}</h2>`;
-    if (line.startsWith('> '))  return `<blockquote style="border-left:2px solid var(--brg);padding:.5rem 1.2rem;margin:1.4rem 0;font-family:var(--serif);font-style:italic;color:var(--brg);background:var(--brg-muted);">${line.slice(2)}</blockquote>`;
+  // Normalisiere sowohl echte Zeilenumbrüche als auch escaped \n aus der DB
+  const normalized = text.replace(/\\n/g, '\n').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  return normalized.split('\n').map(line => {
+    if (line.startsWith('## ')) return `<h2 class="art-h2">${line.slice(3)}</h2>`;
+    if (line.startsWith('> '))  return `<blockquote class="art-bq">${line.slice(2)}</blockquote>`;
     if (line.trim() === '') return '';
-    return `<p style="font-family:var(--sans);margin-bottom:1.3rem;">${line}</p>`;
+    return `<p class="art-p">${line}</p>`;
   }).filter(Boolean).join('');
 }
 
@@ -809,81 +818,101 @@ function saveWatchlist() {
 }
 
 // ══════════════════════════════════
-//  MARKTDATEN — CoinGecko für BTC/Gold, stooq für Indizes
+//  MARKTDATEN
+//  S&P500, NASDAQ, VIX via stooq + corsproxy.io
+//  Gold via CoinGecko (kein Key, zuverlässig)
 // ══════════════════════════════════
-const HERO_SYMS = [
-  {sym:'^spx',   label:'S&P 500', eur:false},
-  {sym:'^ndq',   label:'NASDAQ',  eur:false},
-  {sym:'xauusd', label:'Gold',    eur:false},
-  {sym:'btcusd', label:'Bitcoin', eur:false}
-];
-
-const FALLBACK = [
-  {label:'S&P 500', val:'5.614',  chg:'-1,76%', dir:'down'},
-  {label:'NASDAQ',  val:'17.468', chg:'-2,61%', dir:'down'},
-  {label:'Gold',    val:'2.911',  chg:'+1,19%', dir:'up'},
-  {label:'Bitcoin', val:'85.176', chg:'-3,82%', dir:'down'}
-];
 
 async function fetchStooq(sym) {
-  // Zwei Proxies — wenn einer versagt, probiert der zweite
+  // corsproxy.io zuerst — zuverlässiger als allorigins
   const proxies = [
-    `https://api.allorigins.win/raw?url=${encodeURIComponent('https://stooq.com/q/l/?s='+sym+'&f=sd2t2ohlcv&h&e=json')}`,
-    `https://corsproxy.io/?${encodeURIComponent('https://stooq.com/q/l/?s='+sym+'&f=sd2t2ohlcv&h&e=json')}`
+    `https://corsproxy.io/?${encodeURIComponent('https://stooq.com/q/l/?s='+sym+'&f=sd2t2ohlcv&h&e=json')}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent('https://stooq.com/q/l/?s='+sym+'&f=sd2t2ohlcv&h&e=json')}`
   ];
   for (const proxy of proxies) {
     try {
-      const res = await fetch(proxy, {signal: AbortSignal.timeout(7000)});
+      const res = await fetch(proxy, {signal: AbortSignal.timeout(8000)});
       if (!res.ok) continue;
-      const data = await res.json();
+      const text = await res.text();
+      const data = JSON.parse(text);
       const q = data?.symbols?.[0];
-      if (!q || !q.Close || q.Close === 'N/D' || q.Close === 0) continue;
-      const close = parseFloat(q.Close);
-      const open  = parseFloat(q.Open);
-      if (!close || !open || isNaN(close) || isNaN(open)) continue;
-      return {price: close, changePct: ((close - open) / open) * 100};
+      if (!q?.Close || q.Close==='N/D' || q.Close===0) continue;
+      const close=parseFloat(q.Close), open=parseFloat(q.Open);
+      if (!close||!open||isNaN(close)||isNaN(open)) continue;
+      return {price:close, changePct:((close-open)/open)*100};
     } catch(e) { continue; }
   }
   return null;
 }
 
-function fmtP(p) {
-  if (!p) return '—';
-  if (p >= 1000) return p.toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2});
-  if (p >= 10)   return p.toFixed(2);
-  return p.toFixed(4);
-}
-function fmtC(p) {
-  if (p == null) return '—';
-  return (p >= 0 ? '+' : '') + p.toFixed(2) + '%';
+async function fetchGoldCoinGecko() {
+  try {
+    const res = await fetch(
+      'https://api.coingecko.com/api/v3/simple/price?ids=tether-gold&vs_currencies=usd&include_24hr_change=true',
+      {signal: AbortSignal.timeout(8000)}
+    );
+    if (!res.ok) return null;
+    const d = await res.json();
+    const g = d['tether-gold'];
+    if (!g?.usd) return null;
+    return {price: g.usd, changePct: g.usd_24h_change};
+  } catch(e) { return null; }
 }
 
-async function loadHeroTicker() {
+function fmtP(p) {
+  if (p==null||isNaN(p)) return '—';
+  if (p >= 10000) return p.toLocaleString('de-DE',{minimumFractionDigits:0,maximumFractionDigits:0});
+  if (p >= 1000)  return p.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if (p >= 10)    return p.toFixed(2);
+  return p.toFixed(2);
+}
+function fmtC(p) {
+  if (p==null||isNaN(p)) return '—';
+  return (p>=0?'+':'')+p.toFixed(2)+'%';
+}
+
+function renderTicker(rows) {
   const el = document.getElementById('ticker-display');
   if (!el) return;
-  // Zeige Fallback sofort
-  el.innerHTML = FALLBACK.map(t=>`<div class="ticker-row">
-    <span class="ticker-name">${t.label}</span>
-    <span class="ticker-val">${t.val}</span>
-    <span class="ticker-chg ${t.dir}-bg">${t.chg}</span>
-  </div>`).join('');
-  // Lade echte Daten parallel
-  try {
-    const results = await Promise.allSettled(HERO_SYMS.map(h => fetchStooq(h.sym)));
-    el.innerHTML = HERO_SYMS.map((h,i) => {
-      const q = results[i].status==='fulfilled' ? results[i].value : null;
-      if (!q) {
-        const fb = FALLBACK[i];
-        return `<div class="ticker-row"><span class="ticker-name">${h.label}</span><span class="ticker-val">${fb.val}</span><span class="ticker-chg ${fb.dir}-bg">${fb.chg}</span></div>`;
-      }
-      const dir = q.changePct >= 0 ? 'up' : 'down';
-      return `<div class="ticker-row">
-        <span class="ticker-name">${h.label}</span>
-        <span class="ticker-val">${fmtP(q.price)}</span>
-        <span class="ticker-chg ${dir}-bg">${fmtC(q.changePct)}</span>
-      </div>`;
-    }).join('');
-  } catch(e) { /* Fallback bleibt */ }
+  el.innerHTML = rows.map(r => {
+    const hasData = r.price != null;
+    const dir = hasData ? (r.changePct>=0?'up':'down') : (r.fallbackDir||'');
+    const val  = hasData ? fmtP(r.price)        : (r.fallbackVal||'—');
+    const chg  = hasData ? fmtC(r.changePct)    : (r.fallbackChg||'—');
+    // VIX: Anstieg = schlecht (rot), Abfall = gut (grün) — invertierte Logik
+    const dispDir = r.invertColor ? (dir==='up'?'down':'up') : dir;
+    return `<div class="ticker-row">
+      <span class="ticker-name">${r.label}</span>
+      <span class="ticker-val">${val}</span>
+      <span class="ticker-chg ${dispDir?dispDir+'-bg':''}">${chg}</span>
+    </div>`;
+  }).join('');
+}
+
+const TICKER_FALLBACK = [
+  {label:'S&P 500', fallbackVal:'5.614',  fallbackChg:'-1,76%', fallbackDir:'down'},
+  {label:'NASDAQ',  fallbackVal:'17.468', fallbackChg:'-2,61%', fallbackDir:'down'},
+  {label:'Gold',    fallbackVal:'3.085',  fallbackChg:'+0,80%', fallbackDir:'up'},
+  {label:'VIX',     fallbackVal:'23.37',  fallbackChg:'+8,21%', fallbackDir:'up', invertColor:true}
+];
+
+async function loadHeroTicker() {
+  if (!document.getElementById('ticker-display')) return;
+  // Fallback sofort
+  renderTicker(TICKER_FALLBACK);
+  // Alle parallel laden
+  const [sp500, nasdaq, gold, vix] = await Promise.all([
+    fetchStooq('^spx'),
+    fetchStooq('^ndq'),
+    fetchGoldCoinGecko(),
+    fetchStooq('^vix')
+  ]);
+  renderTicker([
+    {label:'S&P 500', price:sp500?.price,  changePct:sp500?.changePct,  ...TICKER_FALLBACK[0]},
+    {label:'NASDAQ',  price:nasdaq?.price, changePct:nasdaq?.changePct, ...TICKER_FALLBACK[1]},
+    {label:'Gold',    price:gold?.price,   changePct:gold?.changePct,   ...TICKER_FALLBACK[2]},
+    {label:'VIX',     price:vix?.price,    changePct:vix?.changePct,    ...TICKER_FALLBACK[3], invertColor:true}
+  ]);
 }
 
 async function loadWatchlistQuotes() {
@@ -897,19 +926,19 @@ async function loadWatchlistQuotes() {
   </div>`).join('');
 
   const results = await Promise.allSettled(watchlist.map(w => {
-    const sym = w.ticker.toLowerCase().replace('-','.');
+    const sym = w.ticker.toLowerCase().replace(/-/g,'.');
     return fetchStooq(sym);
   }));
 
   el.innerHTML = watchlist.map((w,i) => {
     const q = results[i].status==='fulfilled' ? results[i].value : null;
-    const dir = q ? (q.changePct >= 0 ? 'up' : 'down') : '';
+    const dir = q ? (q.changePct>=0?'up':'down') : '';
     return `<div class="wl-rank-item">
       <span class="wl-rank-num">${i+1}</span>
       <div class="wl-rank-body"><div class="wl-rank-ticker">${w.ticker}</div><div class="wl-rank-name">${w.company}</div></div>
       <div class="wl-rank-right">
-        <div class="wl-rank-price">${q ? fmtP(q.price) : '—'}</div>
-        <div class="wl-rank-pct ${dir}">${q ? fmtC(q.changePct) : '—'}</div>
+        <div class="wl-rank-price">${q?fmtP(q.price):'—'}</div>
+        <div class="wl-rank-pct ${dir}">${q?fmtC(q.changePct):'—'}</div>
       </div>
     </div>`;
   }).join('');
