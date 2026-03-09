@@ -440,91 +440,71 @@ footer{border-top:1px solid var(--rule);margin-top:2rem;}
 </footer>
 
 <script>
-// ══════════════════════════════════
-//  SUPABASE
-// ══════════════════════════════════
 const SUPABASE_URL = 'https://fncwjdfpnrhsuplbgomn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuY3dqZGZwbnJoc3VwbGJnb21uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MzczOTUsImV4cCI6MjA4ODQxMzM5NX0.A7wHYv-GsCV-ZUBHtgI9nWncbZm88d9TDLlNmoQxMzw';
-const ADMIN_EMAIL  = 'raphael.buecker@gmail.com';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const ADMIN_EMAIL = 'raphael.buecker@gmail.com';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true }
+});
 
-// ══════════════════════════════════
-//  STATE
-// ══════════════════════════════════
 let currentUser = null, currentProfile = null, isAdmin = false, favorites = [];
 let watchlist = JSON.parse(localStorage.getItem('lv_watchlist') || 'null') || [
-  {ticker:'NVDA',  company:'NVIDIA Corp.',      conviction:'Hoch'},
-  {ticker:'ASML',  company:'ASML Holding',       conviction:'Hoch'},
-  {ticker:'BRK-B', company:'Berkshire Hathaway', conviction:'Mittel'},
-  {ticker:'SAP',   company:'SAP SE',             conviction:'Watch'},
-  {ticker:'BTC-USD',company:'Bitcoin',           conviction:'Watch'}
+  {ticker:'NVDA',  company:'NVIDIA Corp.'},
+  {ticker:'ASML',  company:'ASML Holding'},
+  {ticker:'BRK-B', company:'Berkshire Hathaway'},
+  {ticker:'SAP',   company:'SAP SE'}
 ];
 
-// ══════════════════════════════════
-//  AUTH
-// ══════════════════════════════════
 sb.auth.onAuthStateChange(async (event, session) => {
   currentUser = session?.user || null;
   isAdmin = currentUser?.email === ADMIN_EMAIL;
-  if (currentUser) { await loadProfile(); await loadFavorites(); }
-  else { currentProfile = null; favorites = []; }
+  if (currentUser) {
+    try { const {data} = await sb.from('profiles').select('*').eq('id', currentUser.id).single(); currentProfile = data; } catch(e) {}
+    try { const {data} = await sb.from('favorites').select('article_id').eq('user_id', currentUser.id); favorites = (data||[]).map(f=>f.article_id); } catch(e) {}
+  } else { currentProfile = null; favorites = []; }
   updateUserTrigger();
-  renderFeed();
-  renderBlog();
 });
-
-async function loadProfile() {
-  if (!currentUser) return;
-  const {data} = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
-  currentProfile = data;
-}
-
-async function loadFavorites() {
-  if (!currentUser) { favorites = []; return; }
-  const {data} = await sb.from('favorites').select('article_id').eq('user_id', currentUser.id);
-  favorites = (data||[]).map(f => f.article_id);
-}
 
 async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
-  const pw    = document.getElementById('login-pw').value;
-  const btn   = document.getElementById('login-btn');
-  const err   = document.getElementById('login-err');
-  err.style.display='none';
-  btn.disabled=true; btn.textContent='Einloggen…';
+  const pw = document.getElementById('login-pw').value;
+  const btn = document.getElementById('login-btn');
+  const err = document.getElementById('login-err');
+  err.style.display='none'; btn.disabled=true; btn.textContent='Einloggen…';
   const {error} = await sb.auth.signInWithPassword({email, password:pw});
   btn.disabled=false; btn.textContent='Einloggen';
   if (error) { err.textContent='E-Mail oder Passwort falsch.'; err.style.display='block'; return; }
   closeAuthModal();
-  if (email===ADMIN_EMAIL) setTimeout(openAdmin, 300);
+  if (email===ADMIN_EMAIL) setTimeout(openAdmin, 400);
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  currentUser=null; currentProfile=null; isAdmin=false; favorites=[];
+  updateUserTrigger(); closeUserMenu(); renderFeed(); renderBlog();
 }
 
 async function doRegister() {
   const username = document.getElementById('reg-username').value.trim();
-  const email    = document.getElementById('reg-email').value.trim();
-  const pw       = document.getElementById('reg-pw').value;
-  const btn      = document.getElementById('reg-btn');
-  const err      = document.getElementById('reg-err');
-  const ok       = document.getElementById('reg-ok');
+  const email = document.getElementById('reg-email').value.trim();
+  const pw = document.getElementById('reg-pw').value;
+  const btn = document.getElementById('reg-btn');
+  const err = document.getElementById('reg-err');
+  const ok = document.getElementById('reg-ok');
   err.style.display='none'; ok.style.display='none';
-  if (!username) { err.textContent='Bitte einen Username eingeben.'; err.style.display='block'; return; }
-  if (pw.length < 6) { err.textContent='Passwort muss mindestens 6 Zeichen haben.'; err.style.display='block'; return; }
+  if (!username) { err.textContent='Bitte Username eingeben.'; err.style.display='block'; return; }
+  if (pw.length<6) { err.textContent='Passwort min. 6 Zeichen.'; err.style.display='block'; return; }
   btn.disabled=true; btn.textContent='Registrieren…';
   const {data, error} = await sb.auth.signUp({email, password:pw});
   if (error) { err.textContent=error.message; err.style.display='block'; btn.disabled=false; btn.textContent='Konto erstellen'; return; }
   if (data.user) await sb.from('profiles').upsert({id:data.user.id, username});
   btn.disabled=false; btn.textContent='Konto erstellen';
-  ok.textContent='✓ Konto erstellt! Bitte bestätige deine E-Mail, dann kannst du dich einloggen.';
-  ok.style.display='block';
+  ok.textContent='✓ Konto erstellt! Bitte E-Mail bestätigen, dann einloggen.'; ok.style.display='block';
 }
 
-async function doLogout() { await sb.auth.signOut(); closeUserMenu(); }
-
-// ══════════════════════════════════
-//  USER MENU
-// ══════════════════════════════════
 function updateUserTrigger() {
-  document.getElementById('user-trigger').classList.toggle('logged-in', !!currentUser);
+  const btn = document.getElementById('user-trigger');
+  if (btn) btn.classList.toggle('logged-in', !!currentUser);
 }
 function toggleUserMenu() {
   const p = document.getElementById('user-menu-panel');
@@ -535,18 +515,11 @@ function closeUserMenu() { document.getElementById('user-menu-panel').classList.
 function renderUserMenu() {
   const el = document.getElementById('user-menu-content');
   if (!currentUser) {
-    el.innerHTML = `<button class="umenu-item" onclick="openAuthModal('login');closeUserMenu()">Einloggen</button>
-      <button class="umenu-item" onclick="openAuthModal('register');closeUserMenu()">Registrieren</button>`;
+    el.innerHTML = `<button class="umenu-item" onclick="openAuthModal('login');closeUserMenu()">Einloggen</button><button class="umenu-item" onclick="openAuthModal('register');closeUserMenu()">Registrieren</button>`;
   } else if (isAdmin) {
-    el.innerHTML = `<div class="umenu-user"><div class="umenu-username">Admin ⚙</div><div class="umenu-email">${currentUser.email}</div></div>
-      <button class="umenu-item" onclick="openAdmin();closeUserMenu()">Admin-Panel öffnen</button>
-      <hr class="umenu-divider">
-      <button class="umenu-item" onclick="doLogout()" style="color:#c0392b;">Ausloggen</button>`;
+    el.innerHTML = `<div class="umenu-user"><div class="umenu-username">Admin ⚙</div><div class="umenu-email">${currentUser.email}</div></div><button class="umenu-item" onclick="openAdmin();closeUserMenu()">Admin-Panel öffnen</button><hr class="umenu-divider"><button class="umenu-item" style="color:#c0392b;" onclick="doLogout()">Ausloggen</button>`;
   } else {
-    el.innerHTML = `<div class="umenu-user"><div class="umenu-username">${currentProfile?.username||'User'}</div><div class="umenu-email">${currentUser.email}</div></div>
-      <button class="umenu-item" onclick="showPage('favorites');closeUserMenu()">★ Meine Favoriten</button>
-      <hr class="umenu-divider">
-      <button class="umenu-item" onclick="doLogout()" style="color:#c0392b;">Ausloggen</button>`;
+    el.innerHTML = `<div class="umenu-user"><div class="umenu-username">${currentProfile?.username||'User'}</div><div class="umenu-email">${currentUser.email}</div></div><button class="umenu-item" onclick="showPage('favorites');closeUserMenu()">★ Meine Favoriten</button><hr class="umenu-divider"><button class="umenu-item" style="color:#c0392b;" onclick="doLogout()">Ausloggen</button>`;
   }
 }
 function openAuthModal(tab='login') { document.getElementById('auth-modal').classList.add('open'); switchAuthTab(tab); }
@@ -558,119 +531,91 @@ function switchAuthTab(name) {
   document.getElementById('tab-'+name+'-btn').classList.add('active');
 }
 
-// ══════════════════════════════════
-//  ARTICLES — CACHE + SUPABASE
-// ══════════════════════════════════
-const CACHE_KEY = 'lv_articles_cache';
+const CACHE_KEY = 'lv_articles_v2';
 let articlesCache = null;
+let fetchPromise = null;
 
 function getCached() {
   if (articlesCache) return articlesCache;
-  try { const r=localStorage.getItem(CACHE_KEY); if(r){articlesCache=JSON.parse(r);return articlesCache;} } catch(e){}
+  try { const r=localStorage.getItem(CACHE_KEY); if(r){articlesCache=JSON.parse(r);return articlesCache;} } catch(e) {}
   return null;
 }
 function setCache(data) {
   articlesCache = data;
-  try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch(e){}
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch(e) {}
 }
-
 async function fetchArticles() {
-  try {
-    const {data,error} = await sb.from('articles').select('*').order('created_at',{ascending:false});
-    if (error) throw error;
-    setCache(data||[]);
-    return data||[];
-  } catch(e) {
-    console.warn('Supabase offline, using cache');
-    return getCached()||[];
-  }
+  if (fetchPromise) return fetchPromise;
+  fetchPromise = (async () => {
+    try {
+      const {data,error} = await sb.from('articles').select('*').order('created_at',{ascending:false});
+      if (error) throw error;
+      setCache(data||[]); return data||[];
+    } catch(e) { return getCached()||[]; }
+    finally { fetchPromise = null; }
+  })();
+  return fetchPromise;
 }
 
 function parseContent(text) {
   if (!text) return '';
-  // Normalisiere sowohl echte Zeilenumbrüche als auch escaped \n aus der DB
-  const normalized = text.replace(/\\n/g, '\n').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-  return normalized.split('\n').map(line => {
+  return text.replace(/\\n/g,'\n').replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n').map(line=>{
     if (line.startsWith('## ')) return `<h2 class="art-h2">${line.slice(3)}</h2>`;
     if (line.startsWith('> '))  return `<blockquote class="art-bq">${line.slice(2)}</blockquote>`;
-    if (line.trim() === '') return '';
+    if (line.trim()==='') return '';
     return `<p class="art-p">${line}</p>`;
   }).filter(Boolean).join('');
 }
-
-function formatDate(iso) {
-  return new Date(iso).toLocaleDateString('de-DE',{day:'numeric',month:'long',year:'numeric'});
-}
+function formatDate(iso) { return new Date(iso).toLocaleDateString('de-DE',{day:'numeric',month:'long',year:'numeric'}); }
 function favBtn(id) {
   if (!currentUser||isAdmin) return '';
-  const f = favorites.includes(id);
+  const f=favorites.includes(id);
   return `<button class="fav-btn ${f?'active':''}" onclick="toggleFav(${id},this)">${f?'★ Gespeichert':'☆ Favorit'}</button>`;
 }
 async function toggleFav(articleId, btn) {
   if (!currentUser) { openAuthModal(); return; }
-  const isFav = favorites.includes(articleId);
+  const isFav=favorites.includes(articleId);
   if (isFav) {
     await sb.from('favorites').delete().eq('user_id',currentUser.id).eq('article_id',articleId);
-    favorites = favorites.filter(f=>f!==articleId);
-    btn.className='fav-btn'; btn.innerHTML='☆ Favorit';
+    favorites=favorites.filter(f=>f!==articleId); btn.className='fav-btn'; btn.innerHTML='☆ Favorit';
   } else {
-    await sb.from('favorites').insert({user_id:currentUser.id, article_id:articleId});
-    favorites.push(articleId);
-    btn.className='fav-btn active'; btn.innerHTML='★ Gespeichert';
+    await sb.from('favorites').insert({user_id:currentUser.id,article_id:articleId});
+    favorites.push(articleId); btn.className='fav-btn active'; btn.innerHTML='★ Gespeichert';
   }
 }
 
-// ══════════════════════════════════
-//  SKELETON
-// ══════════════════════════════════
 function skelFeed() {
-  return [1,2,3].map((n,i)=>`<div style="padding:${i===0?'0 0 3rem':'1.75rem 0'};border-bottom:1px solid var(--rule);">
+  return [1,2,3].map((_,i)=>`<div style="padding:${i===0?'0 0 3rem':'1.75rem 0'};border-bottom:1px solid var(--rule);">
     <div style="display:flex;gap:.6rem;margin-bottom:.9rem;"><div class="skel" style="width:80px;height:18px;"></div><div class="skel" style="width:100px;height:18px;"></div></div>
     <div class="skel" style="width:${i===0?'85%':'70%'};height:${i===0?'32px':'22px'};margin-bottom:.8rem;"></div>
     <div class="skel" style="width:100%;height:13px;margin-bottom:.4rem;"></div>
     <div class="skel" style="width:75%;height:13px;"></div>
   </div>`).join('');
 }
-function skelBlog() {
-  return [1,2,3].map(()=>`<div style="padding:3rem 0;border-bottom:1px solid var(--rule);">
-    <div style="display:flex;gap:.6rem;margin-bottom:.9rem;"><div class="skel" style="width:80px;height:18px;"></div><div class="skel" style="width:100px;height:18px;"></div></div>
-    <div class="skel" style="width:70%;height:26px;margin-bottom:1.5rem;"></div>
-    <div class="skel" style="width:100%;height:13px;margin-bottom:.5rem;"></div>
-    <div class="skel" style="width:100%;height:13px;margin-bottom:.5rem;"></div>
-    <div class="skel" style="width:55%;height:13px;"></div>
-  </div>`).join('');
-}
 
-// ══════════════════════════════════
-//  RENDER
-// ══════════════════════════════════
 function buildFeedHTML(articles) {
   if (!articles.length) return '<p class="empty-state">Noch keine Artikel.</p>';
-  const featured = articles.find(a=>a.featured);
-  const rest = articles.filter(a=>!a.featured);
+  const featured=articles.find(a=>a.featured), rest=articles.filter(a=>!a.featured);
   let html='';
   if (featured) html+=`<article class="post-featured">
     <div class="pmeta"><span class="tag">${featured.category}</span><span class="pdate">${formatDate(featured.created_at)}</span><span class="f-badge">⬡ Leitartikel</span>${favBtn(featured.id)}</div>
-    <h2><a onclick="openArticle(${featured.id});return false;" href="#">${featured.title}</a></h2>
+    <h2><a href="#" onclick="openArticle(${featured.id});return false;">${featured.title}</a></h2>
     <p class="pexcerpt">${featured.excerpt||''}</p>
     <button class="btn-read" onclick="openArticle(${featured.id})">Weiterlesen →</button>
   </article>`;
-  html += rest.map((a,i)=>`<article class="post-item" style="animation-delay:${.1+i*.07}s">
+  html+=rest.map((a,i)=>`<article class="post-item" style="animation-delay:${.1+i*.07}s">
     <div class="pmeta"><span class="tag tag-o">${a.category}</span><span class="pdate">${formatDate(a.created_at)}</span>${favBtn(a.id)}</div>
-    <h3><a onclick="openArticle(${a.id});return false;" href="#">${a.title}</a></h3>
+    <h3><a href="#" onclick="openArticle(${a.id});return false;">${a.title}</a></h3>
     <p class="pexcerpt">${a.excerpt||''}</p>
     <button class="btn-read" onclick="openArticle(${a.id})" style="margin-top:.4rem;">Weiterlesen →</button>
   </article>`).join('');
   return html;
 }
-
 async function renderFeed() {
-  const el = document.getElementById('post-feed');
-  if (!el) return;
-  const cached = getCached();
-  el.innerHTML = cached?.length ? buildFeedHTML(cached) : skelFeed();
-  const fresh = await fetchArticles();
-  el.innerHTML = buildFeedHTML(fresh);
+  const el=document.getElementById('post-feed'); if (!el) return;
+  const cached=getCached();
+  el.innerHTML=cached?buildFeedHTML(cached):skelFeed();
+  const fresh=await fetchArticles(); el.innerHTML=buildFeedHTML(fresh);
 }
 
 function buildBlogHTML(articles) {
@@ -682,73 +627,69 @@ function buildBlogHTML(articles) {
     <div class="blog-article-body">${parseContent(a.content||a.excerpt)}</div>
   </article>`).join('');
 }
-
 async function renderBlog() {
-  const el = document.getElementById('blog-feed');
-  if (!el) return;
-  const cached = getCached();
-  el.innerHTML = cached?.length ? buildBlogHTML(cached) : skelBlog();
-  const fresh = await fetchArticles();
-  el.innerHTML = buildBlogHTML(fresh);
+  const el=document.getElementById('blog-feed'); if (!el) return;
+  const cached=getCached();
+  el.innerHTML=cached?buildBlogHTML(cached):'<p class="empty-state" style="padding:2rem 0;">Wird geladen…</p>';
+  const fresh=await fetchArticles(); el.innerHTML=buildBlogHTML(fresh);
 }
 
 async function openArticle(id) {
-  const {data:a} = await sb.from('articles').select('*').eq('id',id).single();
-  if (!a) return;
-  document.getElementById('art-title').textContent = a.title;
-  document.getElementById('art-meta').innerHTML = `<span class="tag">${a.category}</span><span class="pdate">${formatDate(a.created_at)}</span>${favBtn(a.id)}`;
-  document.getElementById('art-body').innerHTML = parseContent(a.content);
   showPage('article');
+  document.getElementById('art-title').textContent='';
+  document.getElementById('art-body').innerHTML=skelFeed();
+  const {data:a}=await sb.from('articles').select('*').eq('id',id).single();
+  if (!a) return;
+  document.getElementById('art-title').textContent=a.title;
+  document.getElementById('art-meta').innerHTML=`<span class="tag">${a.category}</span><span class="pdate">${formatDate(a.created_at)}</span>${favBtn(a.id)}`;
+  document.getElementById('art-body').innerHTML=parseContent(a.content);
 }
 
 async function renderFavorites() {
-  const el = document.getElementById('favorites-feed');
-  if (!currentUser) { el.innerHTML='<p class="empty-state">Bitte einloggen um Favoriten zu sehen.</p>'; return; }
-  await loadFavorites();
-  if (!favorites.length) { el.innerHTML='<p class="empty-state">Noch keine Favoriten gespeichert.</p>'; return; }
-  const {data:articles} = await sb.from('articles').select('*').in('id',favorites);
+  const el=document.getElementById('favorites-feed');
+  if (!currentUser) { el.innerHTML='<p class="empty-state">Bitte einloggen.</p>'; return; }
+  const {data:favData}=await sb.from('favorites').select('article_id').eq('user_id',currentUser.id);
+  favorites=(favData||[]).map(f=>f.article_id);
+  if (!favorites.length) { el.innerHTML='<p class="empty-state">Noch keine Favoriten.</p>'; return; }
+  const {data:articles}=await sb.from('articles').select('*').in('id',favorites);
   if (!articles?.length) { el.innerHTML='<p class="empty-state">Keine Artikel gefunden.</p>'; return; }
-  el.innerHTML = articles.map((a,i)=>`<article class="post-item" style="animation-delay:${i*.07}s">
+  el.innerHTML=articles.map((a,i)=>`<article class="post-item" style="animation-delay:${i*.07}s">
     <div class="pmeta"><span class="tag tag-o">${a.category}</span><span class="pdate">${formatDate(a.created_at)}</span>${favBtn(a.id)}</div>
-    <h3><a onclick="openArticle(${a.id});return false;" href="#">${a.title}</a></h3>
+    <h3><a href="#" onclick="openArticle(${a.id});return false;">${a.title}</a></h3>
     <p class="pexcerpt">${a.excerpt||''}</p>
   </article>`).join('');
 }
 
-// ══════════════════════════════════
-//  PAGE NAV
-// ══════════════════════════════════
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('page-'+name)?.classList.add('active');
+  const pg=document.getElementById('page-'+name); if (pg) pg.classList.add('active');
   if (name==='blog') renderBlog();
   if (name==='favorites') renderFavorites();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-// ══════════════════════════════════
-//  ADMIN
-// ══════════════════════════════════
-function openAdmin() { if (!isAdmin) return; document.getElementById('admin-panel').classList.add('open'); renderAdminArticles(); renderAdminWatchlist(); }
+function openAdmin() {
+  if (!isAdmin) return;
+  document.getElementById('admin-panel').classList.add('open');
+  renderAdminArticles(); renderAdminWatchlist();
+}
 function closeAdmin() { document.getElementById('admin-panel').classList.remove('open'); }
-function switchAdminTab(name, btn) {
+function switchAdminTab(name,btn) {
   document.querySelectorAll('.a-tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.a-sec').forEach(s=>s.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active'); document.getElementById('tab-'+name).classList.add('active');
 }
 async function renderAdminArticles() {
-  const el = document.getElementById('admin-articles-list');
-  const arts = await fetchArticles();
+  const el=document.getElementById('admin-articles-list');
+  const arts=await fetchArticles();
   if (!arts.length) { el.innerHTML='<p style="color:var(--ink-muted);font-size:.85rem;padding:1rem 0;">Noch keine Artikel.</p>'; return; }
-  el.innerHTML = arts.map(a=>`<div class="ali">
+  el.innerHTML=arts.map(a=>`<div class="ali">
     <div class="ali-meta"><div class="ali-title">${a.title}</div><div class="ali-info">${a.category} · ${formatDate(a.created_at)}${a.featured?' · ⬡ Leitartikel':''}</div></div>
     <div class="ali-actions"><button class="btn-sa" onclick="editArticle(${a.id})">Bearbeiten</button><button class="btn-da" onclick="deleteArticle(${a.id})">Löschen</button></div>
   </div>`).join('');
 }
 async function editArticle(id) {
-  const {data:a} = await sb.from('articles').select('*').eq('id',id).single();
-  if (!a) return;
+  const {data:a}=await sb.from('articles').select('*').eq('id',id).single(); if (!a) return;
   document.getElementById('edit-id').value=a.id;
   document.getElementById('a-title').value=a.title;
   document.getElementById('a-cat').value=a.category;
@@ -760,271 +701,184 @@ async function editArticle(id) {
 }
 async function deleteArticle(id) {
   if (!confirm('Artikel wirklich löschen?')) return;
-  await sb.from('articles').delete().eq('id',id);
+  const {error}=await sb.from('articles').delete().eq('id',id);
+  if (error) { alert('Fehler: '+error.message); return; }
   articlesCache=null; localStorage.removeItem(CACHE_KEY);
   renderAdminArticles(); renderFeed(); renderBlog();
 }
+
 async function saveArticle() {
-  const saveBtn = document.getElementById('save-article-btn');
-  const okEl    = document.getElementById('art-ok');
-  const dbgEl   = document.getElementById('art-debug');
+  const btn   = document.getElementById('save-article-btn');
+  const okEl  = document.getElementById('art-ok');
+  const dbgEl = document.getElementById('art-debug');
+  btn.disabled=true; btn.textContent='Speichern…';
+  okEl.style.display='none'; dbgEl.style.display='none';
 
-  // Sofortiges visuelles Feedback — wenn das nicht erscheint, wird die Funktion nie aufgerufen
-  saveBtn.disabled = true;
-  saveBtn.textContent = 'Speichern…';
-  okEl.style.display = 'none';
-  dbgEl.style.display = 'none';
+  const id         = document.getElementById('edit-id').value.trim();
+  const title      = document.getElementById('a-title').value.trim();
+  const category   = document.getElementById('a-cat').value;
+  const excerpt    = document.getElementById('a-excerpt').value.trim();
+  const content    = document.getElementById('a-content').value.trim();
+  const isFeatured = document.getElementById('a-featured').checked;
 
-  const id        = document.getElementById('edit-id').value.trim();
-  const isFeatured= document.getElementById('a-featured').checked;
-  const title     = document.getElementById('a-title').value.trim();
-  const category  = document.getElementById('a-cat').value;
-  const excerpt   = document.getElementById('a-excerpt').value.trim();
-  const content   = document.getElementById('a-content').value.trim();
-
-  function showErr(msg) {
-    okEl.textContent = '⚠ ' + msg;
-    okEl.style.background='rgba(192,57,43,.07)';
-    okEl.style.color='#c0392b';
-    okEl.style.borderColor='rgba(192,57,43,.25)';
+  function showMsg(text, isError) {
+    okEl.textContent=text;
+    okEl.style.background=isError?'rgba(192,57,43,.07)':'';
+    okEl.style.color=isError?'#c0392b':'';
     okEl.style.display='block';
-    saveBtn.disabled=false;
-    saveBtn.textContent='Speichern';
+    btn.disabled=false; btn.textContent='Speichern';
   }
 
-  if (!title) { showErr('Bitte einen Titel eingeben.'); return; }
+  if (!title) { showMsg('⚠ Bitte Titel eingeben.',true); return; }
 
-  // Session prüfen
-  let session;
-  try {
-    const r = await sb.auth.getSession();
-    session = r.data?.session;
-  } catch(e) { showErr('Session-Fehler: ' + e.message); return; }
-
-  if (!session) { showErr('Nicht eingeloggt — bitte neu einloggen.'); return; }
+  const {data:{session}} = await sb.auth.getSession();
+  if (!session) { showMsg('⚠ Nicht eingeloggt. Bitte neu einloggen.',true); return; }
 
   try {
-    if (isFeatured) {
-      await sb.from('articles').update({featured:false}).eq('featured',true);
-    }
+    if (isFeatured) await sb.from('articles').update({featured:false}).eq('featured',true);
+    const payload={title,category,featured:isFeatured,excerpt,content};
+    const res = id
+      ? await sb.from('articles').update(payload).eq('id',parseInt(id)).select()
+      : await sb.from('articles').insert(payload).select();
 
-    const payload = {title, category, featured:isFeatured, excerpt, content};
-    let res;
-
-    if (id) {
-      res = await sb.from('articles').update(payload).eq('id', parseInt(id)).select();
-    } else {
-      res = await sb.from('articles').insert(payload).select();
-    }
-
-    // Debug immer zeigen
     dbgEl.textContent = res.error
-      ? 'DB-Fehler: ' + res.error.message + ' | Code: ' + res.error.code + ' | Details: ' + (res.error.details||'—')
-      : 'OK — gespeichert: ' + JSON.stringify(res.data?.[0]?.title);
-    dbgEl.style.display = 'block';
+      ? 'DB-Fehler: '+res.error.message+' (Code: '+res.error.code+')'
+      : 'OK: '+(res.data?.[0]?.title||'gespeichert');
+    dbgEl.style.display='block';
 
-    if (res.error) { showErr(res.error.message); return; }
+    if (res.error) { showMsg('⚠ '+res.error.message,true); return; }
 
-    // Erfolg
-    articlesCache = null;
-    localStorage.removeItem(CACHE_KEY);
-    okEl.textContent = id ? '✓ Artikel aktualisiert' : '✓ Artikel gespeichert';
-    okEl.style.background = '';
-    okEl.style.color = '';
-    okEl.style.borderColor = '';
-    okEl.style.display = 'block';
-    resetArticleForm();
-    renderAdminArticles();
-    renderFeed();
-    renderBlog();
-    setTimeout(() => { okEl.style.display='none'; dbgEl.style.display='none'; }, 6000);
-
+    articlesCache=null; localStorage.removeItem(CACHE_KEY);
+    showMsg(id?'✓ Artikel aktualisiert':'✓ Artikel gespeichert',false);
+    resetArticleForm(); renderAdminArticles(); renderFeed(); renderBlog();
+    setTimeout(()=>{ okEl.style.display='none'; dbgEl.style.display='none'; },5000);
   } catch(err) {
-    showErr(err.message || JSON.stringify(err));
-  } finally {
-    saveBtn.disabled = false;
-    saveBtn.textContent = 'Speichern';
+    showMsg('⚠ '+(err.message||'Unbekannter Fehler'),true);
   }
 }
+
 function resetArticleForm() {
   ['edit-id','a-title','a-excerpt','a-content'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('a-featured').checked=false;
   document.getElementById('a-cat').value='Quartalszahlen';
 }
 
-// ══════════════════════════════════
-//  WATCHLIST — Auf dem Radar
-// ══════════════════════════════════
 function renderAdminWatchlist() {
-  document.getElementById('wla-list').innerHTML = watchlist.map((w,i)=>`<div class="wla-item">
+  document.getElementById('wla-list').innerHTML=watchlist.map((w,i)=>`<div class="wla-item">
     <span style="font-family:var(--mono);font-size:.75rem;color:var(--ink-muted);min-width:16px;">${i+1}</span>
-    <span class="wla-ticker">${w.ticker}</span>
-    <span class="wla-co">${w.company}</span>
-    <span class="wla-conv">${w.conviction}</span>
+    <span class="wla-ticker">${w.ticker}</span><span class="wla-co">${w.company}</span>
     <button class="btn-da" onclick="removeWatchlistItem(${i})" style="padding:.2rem .5rem;margin-left:auto;">✕</button>
   </div>`).join('');
 }
 function addWatchlistItem() {
   const t=document.getElementById('new-tick').value.trim().toUpperCase();
   const c=document.getElementById('new-co').value.trim();
-  const v=document.getElementById('new-conv').value;
   if (!t) return;
-  watchlist.push({ticker:t, company:c||t, conviction:v});
-  document.getElementById('new-tick').value='';
-  document.getElementById('new-co').value='';
+  watchlist.push({ticker:t,company:c||t});
+  document.getElementById('new-tick').value=''; document.getElementById('new-co').value='';
   renderAdminWatchlist();
 }
 function removeWatchlistItem(i) { watchlist.splice(i,1); renderAdminWatchlist(); }
 function saveWatchlist() {
-  localStorage.setItem('lv_watchlist', JSON.stringify(watchlist));
-  loadWatchlistQuotes();
-  const ok=document.getElementById('wl-ok');
-  ok.style.display='block'; setTimeout(()=>ok.style.display='none',2000);
+  localStorage.setItem('lv_watchlist',JSON.stringify(watchlist)); loadWatchlistQuotes();
+  const ok=document.getElementById('wl-ok'); ok.style.display='block'; setTimeout(()=>ok.style.display='none',2000);
 }
 
-// ══════════════════════════════════
-//  MARKTDATEN
-//  S&P500, NASDAQ, VIX via stooq + corsproxy.io
-//  Gold via CoinGecko (kein Key, zuverlässig)
-// ══════════════════════════════════
-
 async function fetchStooq(sym) {
-  // corsproxy.io zuerst — zuverlässiger als allorigins
-  const proxies = [
+  const proxies=[
     `https://corsproxy.io/?${encodeURIComponent('https://stooq.com/q/l/?s='+sym+'&f=sd2t2ohlcv&h&e=json')}`,
     `https://api.allorigins.win/raw?url=${encodeURIComponent('https://stooq.com/q/l/?s='+sym+'&f=sd2t2ohlcv&h&e=json')}`
   ];
   for (const proxy of proxies) {
     try {
-      const res = await fetch(proxy, {signal: AbortSignal.timeout(8000)});
+      const res=await fetch(proxy,{signal:AbortSignal.timeout(8000)});
       if (!res.ok) continue;
-      const text = await res.text();
-      const data = JSON.parse(text);
-      const q = data?.symbols?.[0];
-      if (!q?.Close || q.Close==='N/D' || q.Close===0) continue;
-      const close=parseFloat(q.Close), open=parseFloat(q.Open);
+      const data=JSON.parse(await res.text());
+      const q=data?.symbols?.[0];
+      if (!q?.Close||q.Close==='N/D'||q.Close===0) continue;
+      const close=parseFloat(q.Close),open=parseFloat(q.Open);
       if (!close||!open||isNaN(close)||isNaN(open)) continue;
-      return {price:close, changePct:((close-open)/open)*100};
+      return {price:close,changePct:((close-open)/open)*100};
     } catch(e) { continue; }
   }
   return null;
 }
-
-async function fetchGoldCoinGecko() {
+async function fetchGold() {
   try {
-    const res = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=tether-gold&vs_currencies=usd&include_24hr_change=true',
-      {signal: AbortSignal.timeout(8000)}
-    );
+    const res=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=tether-gold&vs_currencies=usd&include_24hr_change=true',{signal:AbortSignal.timeout(8000)});
     if (!res.ok) return null;
-    const d = await res.json();
-    const g = d['tether-gold'];
+    const d=await res.json(); const g=d['tether-gold'];
     if (!g?.usd) return null;
-    return {price: g.usd, changePct: g.usd_24h_change};
+    return {price:g.usd,changePct:g.usd_24h_change};
   } catch(e) { return null; }
 }
-
 function fmtP(p) {
   if (p==null||isNaN(p)) return '—';
-  if (p >= 10000) return p.toLocaleString('de-DE',{minimumFractionDigits:0,maximumFractionDigits:0});
-  if (p >= 1000)  return p.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
-  if (p >= 10)    return p.toFixed(2);
+  if (p>=10000) return p.toLocaleString('de-DE',{minimumFractionDigits:0,maximumFractionDigits:0});
+  if (p>=1000)  return p.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
   return p.toFixed(2);
 }
-function fmtC(p) {
-  if (p==null||isNaN(p)) return '—';
-  return (p>=0?'+':'')+p.toFixed(2)+'%';
-}
+function fmtC(p) { if (p==null||isNaN(p)) return '—'; return (p>=0?'+':'')+p.toFixed(2)+'%'; }
 
+const FALLBACKS=[
+  {label:'S&P 500',val:'5.614', chg:'-1,76%',dir:'down',inv:false},
+  {label:'NASDAQ', val:'17.468',chg:'-2,61%',dir:'down',inv:false},
+  {label:'Gold',   val:'3.085', chg:'+0,80%',dir:'up',  inv:false},
+  {label:'VIX',    val:'23.37', chg:'+8,21%',dir:'up',  inv:true}
+];
 function renderTicker(rows) {
-  const el = document.getElementById('ticker-display');
-  if (!el) return;
-  el.innerHTML = rows.map(r => {
-    const hasData = r.price != null;
-    const dir = hasData ? (r.changePct>=0?'up':'down') : (r.fallbackDir||'');
-    const val  = hasData ? fmtP(r.price)        : (r.fallbackVal||'—');
-    const chg  = hasData ? fmtC(r.changePct)    : (r.fallbackChg||'—');
-    // VIX: Anstieg = schlecht (rot), Abfall = gut (grün) — invertierte Logik
-    const dispDir = r.invertColor ? (dir==='up'?'down':'up') : dir;
-    return `<div class="ticker-row">
-      <span class="ticker-name">${r.label}</span>
-      <span class="ticker-val">${val}</span>
-      <span class="ticker-chg ${dispDir?dispDir+'-bg':''}">${chg}</span>
-    </div>`;
+  const el=document.getElementById('ticker-display'); if (!el) return;
+  el.innerHTML=rows.map((r,i)=>{
+    const fb=FALLBACKS[i];
+    const hasData=r.price!=null;
+    let dir=hasData?(r.changePct>=0?'up':'down'):fb.dir;
+    if (fb.inv) dir=dir==='up'?'down':'up';
+    const val=hasData?fmtP(r.price):fb.val;
+    const chg=hasData?fmtC(r.changePct):fb.chg;
+    return `<div class="ticker-row"><span class="ticker-name">${r.label}</span><span class="ticker-val">${val}</span><span class="ticker-chg ${dir}-bg">${chg}</span></div>`;
   }).join('');
 }
-
-const TICKER_FALLBACK = [
-  {label:'S&P 500', fallbackVal:'5.614',  fallbackChg:'-1,76%', fallbackDir:'down'},
-  {label:'NASDAQ',  fallbackVal:'17.468', fallbackChg:'-2,61%', fallbackDir:'down'},
-  {label:'Gold',    fallbackVal:'3.085',  fallbackChg:'+0,80%', fallbackDir:'up'},
-  {label:'VIX',     fallbackVal:'23.37',  fallbackChg:'+8,21%', fallbackDir:'up', invertColor:true}
-];
-
 async function loadHeroTicker() {
   if (!document.getElementById('ticker-display')) return;
-  // Fallback sofort
-  renderTicker(TICKER_FALLBACK);
-  // Alle parallel laden
-  const [sp500, nasdaq, gold, vix] = await Promise.all([
-    fetchStooq('^spx'),
-    fetchStooq('^ndq'),
-    fetchGoldCoinGecko(),
-    fetchStooq('^vix')
-  ]);
+  renderTicker(FALLBACKS.map(f=>({label:f.label})));
+  const [sp500,nasdaq,gold,vix]=await Promise.all([fetchStooq('^spx'),fetchStooq('^ndq'),fetchGold(),fetchStooq('^vix')]);
   renderTicker([
-    {label:'S&P 500', price:sp500?.price,  changePct:sp500?.changePct,  ...TICKER_FALLBACK[0]},
-    {label:'NASDAQ',  price:nasdaq?.price, changePct:nasdaq?.changePct, ...TICKER_FALLBACK[1]},
-    {label:'Gold',    price:gold?.price,   changePct:gold?.changePct,   ...TICKER_FALLBACK[2]},
-    {label:'VIX',     price:vix?.price,    changePct:vix?.changePct,    ...TICKER_FALLBACK[3], invertColor:true}
+    {label:'S&P 500',price:sp500?.price, changePct:sp500?.changePct},
+    {label:'NASDAQ', price:nasdaq?.price,changePct:nasdaq?.changePct},
+    {label:'Gold',   price:gold?.price,  changePct:gold?.changePct},
+    {label:'VIX',    price:vix?.price,   changePct:vix?.changePct}
   ]);
 }
-
 async function loadWatchlistQuotes() {
-  const el = document.getElementById('watchlist-display');
-  if (!el || !watchlist.length) return;
-  // Platzhalter sofort
-  el.innerHTML = watchlist.map((w,i) => `<div class="wl-rank-item">
+  const el=document.getElementById('watchlist-display'); if (!el||!watchlist.length) return;
+  el.innerHTML=watchlist.map((w,i)=>`<div class="wl-rank-item">
     <span class="wl-rank-num">${i+1}</span>
     <div class="wl-rank-body"><div class="wl-rank-ticker">${w.ticker}</div><div class="wl-rank-name">${w.company}</div></div>
-    <div class="wl-rank-right"><div class="wl-rank-price" style="color:var(--ink-muted);">—</div><div class="wl-rank-pct" style="color:var(--ink-muted);">—</div></div>
+    <div class="wl-rank-right"><div class="wl-rank-price" style="color:var(--ink-muted);">—</div><div class="wl-rank-pct">—</div></div>
   </div>`).join('');
-
-  const results = await Promise.allSettled(watchlist.map(w => {
-    const sym = w.ticker.toLowerCase().replace(/-/g,'.');
-    return fetchStooq(sym);
-  }));
-
-  el.innerHTML = watchlist.map((w,i) => {
-    const q = results[i].status==='fulfilled' ? results[i].value : null;
-    const dir = q ? (q.changePct>=0?'up':'down') : '';
+  const results=await Promise.allSettled(watchlist.map(w=>fetchStooq(w.ticker.toLowerCase().replace(/-/g,'.'))));
+  el.innerHTML=watchlist.map((w,i)=>{
+    const q=results[i].status==='fulfilled'?results[i].value:null;
+    const dir=q?(q.changePct>=0?'up':'down'):'';
     return `<div class="wl-rank-item">
       <span class="wl-rank-num">${i+1}</span>
       <div class="wl-rank-body"><div class="wl-rank-ticker">${w.ticker}</div><div class="wl-rank-name">${w.company}</div></div>
-      <div class="wl-rank-right">
-        <div class="wl-rank-price">${q?fmtP(q.price):'—'}</div>
-        <div class="wl-rank-pct ${dir}">${q?fmtC(q.changePct):'—'}</div>
-      </div>
+      <div class="wl-rank-right"><div class="wl-rank-price">${q?fmtP(q.price):'—'}</div><div class="wl-rank-pct ${dir}">${q?fmtC(q.changePct):'—'}</div></div>
     </div>`;
   }).join('');
 }
 
-// Close on outside click
-document.addEventListener('click', e => {
-  if (!e.target.closest('#user-menu-panel') && !e.target.closest('#user-trigger')) closeUserMenu();
+document.addEventListener('click',e=>{
+  if (!e.target.closest('#user-menu-panel')&&!e.target.closest('#user-trigger')) closeUserMenu();
 });
-document.getElementById('auth-modal').addEventListener('click', e => { if(e.target===document.getElementById('auth-modal')) closeAuthModal(); });
-document.getElementById('admin-panel').addEventListener('click', e => { if(e.target===document.getElementById('admin-panel')) closeAdmin(); });
+document.getElementById('auth-modal').addEventListener('click',e=>{ if(e.target===document.getElementById('auth-modal')) closeAuthModal(); });
+document.getElementById('admin-panel').addEventListener('click',e=>{ if(e.target===document.getElementById('admin-panel')) closeAdmin(); });
 
-// ══════════════════════════════════
-//  INIT
-// ══════════════════════════════════
 renderFeed();
 loadHeroTicker();
 loadWatchlistQuotes();
-setInterval(() => { loadHeroTicker(); loadWatchlistQuotes(); }, 5*60*1000);
-// Supabase warm halten
-setInterval(async () => { try { await sb.from('articles').select('id').limit(1); } catch(e){} }, 4*60*1000);
+setInterval(()=>{ loadHeroTicker(); loadWatchlistQuotes(); },5*60*1000);
+setInterval(async()=>{ try { await sb.from('articles').select('id').limit(1); } catch(e){} },4*60*1000);
 </script>
 </body>
 </html>
