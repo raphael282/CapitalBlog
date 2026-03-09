@@ -407,6 +407,7 @@ footer{border-top:1px solid var(--rule);margin-top:2rem;}
         </div>
         <div class="fga"><label class="ft-toggle"><input type="checkbox" id="a-featured"><span>Als Hauptartikel anzeigen</span></label></div>
         <div style="display:flex;gap:.7rem;"><button class="btn-pa" onclick="saveArticle()">Speichern</button><button class="btn-sa" onclick="resetArticleForm()">Neu</button></div>
+        <div id="art-debug" style="margin-top:1rem;font-size:.75rem;font-family:var(--mono);color:var(--ink-muted);display:none;padding:.6rem;background:#f5f5f0;border-radius:3px;word-break:break-all;"></div>
       </div>
       <div class="a-sec" id="tab-watchlist">
         <div class="ok-msg" id="wl-ok">✓ Gespeichert</div>
@@ -773,50 +774,63 @@ async function saveArticle() {
 
   const saveBtn = document.querySelector('#tab-new-article .btn-pa');
   const okEl    = document.getElementById('art-ok');
+  const dbgEl   = document.getElementById('art-debug');
+
+  // Reset Anzeige
   okEl.style.display='none';
   okEl.style.background=''; okEl.style.borderColor=''; okEl.style.color='';
+  dbgEl.style.display='none';
 
   if (!title) {
     okEl.textContent='⚠ Bitte einen Titel eingeben.';
-    okEl.style.background='rgba(192,57,43,.07)'; okEl.style.color='#c0392b'; okEl.style.borderColor='rgba(192,57,43,.25)';
+    okEl.style.background='rgba(192,57,43,.07)'; okEl.style.color='#c0392b';
+    okEl.style.display='block'; return;
+  }
+
+  // Prüfe ob eingeloggt
+  const {data:{session}} = await sb.auth.getSession();
+  if (!session) {
+    okEl.textContent='⚠ Nicht eingeloggt! Bitte neu einloggen.';
+    okEl.style.background='rgba(192,57,43,.07)'; okEl.style.color='#c0392b';
     okEl.style.display='block'; return;
   }
 
   saveBtn.disabled=true; saveBtn.textContent='Speichern…';
 
   try {
-    // Wenn featured: erst alle anderen auf false setzen
+    // Featured: erst alle anderen auf false
     if (isFeatured) {
       await sb.from('articles').update({featured:false}).eq('featured',true);
     }
 
     const payload = {title, category, featured:isFeatured, excerpt, content};
-    let error;
+    let res;
 
     if (id) {
-      const res = await sb.from('articles').update(payload).eq('id', parseInt(id));
-      error = res.error;
+      res = await sb.from('articles').update(payload).eq('id', parseInt(id)).select();
     } else {
-      const res = await sb.from('articles').insert(payload);
-      error = res.error;
+      res = await sb.from('articles').insert(payload).select();
     }
 
-    if (error) throw error;
+    // Debug-Info immer anzeigen
+    dbgEl.textContent = 'Status: ' + (res.error ? 'FEHLER — ' + res.error.message + ' (Code: ' + res.error.code + ')' : 'OK — ' + (res.data?.length||0) + ' Zeile(n) gespeichert');
+    dbgEl.style.display='block';
+
+    if (res.error) throw res.error;
 
     // Erfolg
     articlesCache=null; localStorage.removeItem(CACHE_KEY);
     okEl.textContent = id ? '✓ Artikel aktualisiert' : '✓ Artikel gespeichert';
     okEl.style.display='block';
-    setTimeout(()=>okEl.style.display='none', 3000);
+    setTimeout(()=>{ okEl.style.display='none'; dbgEl.style.display='none'; }, 5000);
     resetArticleForm();
     renderAdminArticles();
     renderFeed();
     renderBlog();
 
   } catch(err) {
-    console.error('saveArticle error:', err);
-    okEl.textContent = '⚠ Fehler: ' + (err.message || 'Unbekannter Fehler');
-    okEl.style.background='rgba(192,57,43,.07)'; okEl.style.color='#c0392b'; okEl.style.borderColor='rgba(192,57,43,.25)';
+    okEl.textContent = '⚠ ' + (err.message || JSON.stringify(err));
+    okEl.style.background='rgba(192,57,43,.07)'; okEl.style.color='#c0392b';
     okEl.style.display='block';
   } finally {
     saveBtn.disabled=false; saveBtn.textContent='Speichern';
