@@ -406,7 +406,7 @@ footer{border-top:1px solid var(--rule);margin-top:2rem;}
           <p class="hint">## Text = Überschrift &nbsp;|&nbsp; > Text = Zitat-Block</p>
         </div>
         <div class="fga"><label class="ft-toggle"><input type="checkbox" id="a-featured"><span>Als Hauptartikel anzeigen</span></label></div>
-        <div style="display:flex;gap:.7rem;"><button class="btn-pa" onclick="saveArticle()">Speichern</button><button class="btn-sa" onclick="resetArticleForm()">Neu</button></div>
+        <div style="display:flex;gap:.7rem;"><button id="save-article-btn" class="btn-pa" onclick="saveArticle()">Speichern</button><button class="btn-sa" onclick="resetArticleForm()">Neu</button></div>
         <div id="art-debug" style="margin-top:1rem;font-size:.75rem;font-family:var(--mono);color:var(--ink-muted);display:none;padding:.6rem;background:#f5f5f0;border-radius:3px;word-break:break-all;"></div>
       </div>
       <div class="a-sec" id="tab-watchlist">
@@ -765,6 +765,16 @@ async function deleteArticle(id) {
   renderAdminArticles(); renderFeed(); renderBlog();
 }
 async function saveArticle() {
+  const saveBtn = document.getElementById('save-article-btn');
+  const okEl    = document.getElementById('art-ok');
+  const dbgEl   = document.getElementById('art-debug');
+
+  // Sofortiges visuelles Feedback — wenn das nicht erscheint, wird die Funktion nie aufgerufen
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Speichern…';
+  okEl.style.display = 'none';
+  dbgEl.style.display = 'none';
+
   const id        = document.getElementById('edit-id').value.trim();
   const isFeatured= document.getElementById('a-featured').checked;
   const title     = document.getElementById('a-title').value.trim();
@@ -772,33 +782,28 @@ async function saveArticle() {
   const excerpt   = document.getElementById('a-excerpt').value.trim();
   const content   = document.getElementById('a-content').value.trim();
 
-  const saveBtn = document.querySelector('#tab-new-article .btn-pa');
-  const okEl    = document.getElementById('art-ok');
-  const dbgEl   = document.getElementById('art-debug');
-
-  // Reset Anzeige
-  okEl.style.display='none';
-  okEl.style.background=''; okEl.style.borderColor=''; okEl.style.color='';
-  dbgEl.style.display='none';
-
-  if (!title) {
-    okEl.textContent='⚠ Bitte einen Titel eingeben.';
-    okEl.style.background='rgba(192,57,43,.07)'; okEl.style.color='#c0392b';
-    okEl.style.display='block'; return;
+  function showErr(msg) {
+    okEl.textContent = '⚠ ' + msg;
+    okEl.style.background='rgba(192,57,43,.07)';
+    okEl.style.color='#c0392b';
+    okEl.style.borderColor='rgba(192,57,43,.25)';
+    okEl.style.display='block';
+    saveBtn.disabled=false;
+    saveBtn.textContent='Speichern';
   }
 
-  // Prüfe ob eingeloggt
-  const {data:{session}} = await sb.auth.getSession();
-  if (!session) {
-    okEl.textContent='⚠ Nicht eingeloggt! Bitte neu einloggen.';
-    okEl.style.background='rgba(192,57,43,.07)'; okEl.style.color='#c0392b';
-    okEl.style.display='block'; return;
-  }
+  if (!title) { showErr('Bitte einen Titel eingeben.'); return; }
 
-  saveBtn.disabled=true; saveBtn.textContent='Speichern…';
+  // Session prüfen
+  let session;
+  try {
+    const r = await sb.auth.getSession();
+    session = r.data?.session;
+  } catch(e) { showErr('Session-Fehler: ' + e.message); return; }
+
+  if (!session) { showErr('Nicht eingeloggt — bitte neu einloggen.'); return; }
 
   try {
-    // Featured: erst alle anderen auf false
     if (isFeatured) {
       await sb.from('articles').update({featured:false}).eq('featured',true);
     }
@@ -812,28 +817,33 @@ async function saveArticle() {
       res = await sb.from('articles').insert(payload).select();
     }
 
-    // Debug-Info immer anzeigen
-    dbgEl.textContent = 'Status: ' + (res.error ? 'FEHLER — ' + res.error.message + ' (Code: ' + res.error.code + ')' : 'OK — ' + (res.data?.length||0) + ' Zeile(n) gespeichert');
-    dbgEl.style.display='block';
+    // Debug immer zeigen
+    dbgEl.textContent = res.error
+      ? 'DB-Fehler: ' + res.error.message + ' | Code: ' + res.error.code + ' | Details: ' + (res.error.details||'—')
+      : 'OK — gespeichert: ' + JSON.stringify(res.data?.[0]?.title);
+    dbgEl.style.display = 'block';
 
-    if (res.error) throw res.error;
+    if (res.error) { showErr(res.error.message); return; }
 
     // Erfolg
-    articlesCache=null; localStorage.removeItem(CACHE_KEY);
+    articlesCache = null;
+    localStorage.removeItem(CACHE_KEY);
     okEl.textContent = id ? '✓ Artikel aktualisiert' : '✓ Artikel gespeichert';
-    okEl.style.display='block';
-    setTimeout(()=>{ okEl.style.display='none'; dbgEl.style.display='none'; }, 5000);
+    okEl.style.background = '';
+    okEl.style.color = '';
+    okEl.style.borderColor = '';
+    okEl.style.display = 'block';
     resetArticleForm();
     renderAdminArticles();
     renderFeed();
     renderBlog();
+    setTimeout(() => { okEl.style.display='none'; dbgEl.style.display='none'; }, 6000);
 
   } catch(err) {
-    okEl.textContent = '⚠ ' + (err.message || JSON.stringify(err));
-    okEl.style.background='rgba(192,57,43,.07)'; okEl.style.color='#c0392b';
-    okEl.style.display='block';
+    showErr(err.message || JSON.stringify(err));
   } finally {
-    saveBtn.disabled=false; saveBtn.textContent='Speichern';
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Speichern';
   }
 }
 function resetArticleForm() {
