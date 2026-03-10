@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Leviathan — Märkte. Ideen. Perspektiven.</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 :root{
   --brg:#2C5F2E;--brg-light:#3a7a3d;--brg-muted:rgba(44,95,46,0.09);
@@ -479,9 +479,18 @@ async function doLogin() {
 }
 
 async function doLogout() {
-  await sb.auth.signOut();
+  try {
+    await sb.auth.signOut();
+  } catch(e) {}
   currentUser=null; currentProfile=null; isAdmin=false; favorites=[];
-  updateUserTrigger(); closeUserMenu(); renderFeed(); renderBlog();
+  // Menü sofort neu rendern
+  const panel = document.getElementById('user-menu-panel');
+  panel.classList.remove('open');
+  updateUserTrigger();
+  // Admin panel schließen falls offen
+  document.getElementById('admin-panel').classList.remove('open');
+  renderFeed();
+  showStatus('✓ Ausgeloggt', true);
 }
 
 async function doRegister() {
@@ -711,49 +720,76 @@ async function saveArticle() {
   const btn   = document.getElementById('save-article-btn');
   const okEl  = document.getElementById('art-ok');
   const dbgEl = document.getElementById('art-debug');
-  btn.disabled=true; btn.textContent='Speichern…';
-  okEl.style.display='none'; dbgEl.style.display='none';
 
-  const id         = document.getElementById('edit-id').value.trim();
-  const title      = document.getElementById('a-title').value.trim();
+  // Sofort sichtbar reagieren
+  btn.textContent = 'Speichern…';
+  btn.disabled = true;
+  okEl.style.display = 'none';
+  dbgEl.style.display = 'none';
+
+  const id         = (document.getElementById('edit-id').value || '').trim();
+  const title      = (document.getElementById('a-title').value || '').trim();
   const category   = document.getElementById('a-cat').value;
-  const excerpt    = document.getElementById('a-excerpt').value.trim();
-  const content    = document.getElementById('a-content').value.trim();
+  const excerpt    = (document.getElementById('a-excerpt').value || '').trim();
+  const content    = (document.getElementById('a-content').value || '').trim();
   const isFeatured = document.getElementById('a-featured').checked;
 
-  function showMsg(text, isError) {
-    okEl.textContent=text;
-    okEl.style.background=isError?'rgba(192,57,43,.07)':'';
-    okEl.style.color=isError?'#c0392b':'';
-    okEl.style.display='block';
-    btn.disabled=false; btn.textContent='Speichern';
+  function done(msg, ok) {
+    okEl.textContent = msg;
+    okEl.style.background = ok ? '' : 'rgba(192,57,43,.07)';
+    okEl.style.color = ok ? '' : '#c0392b';
+    okEl.style.display = 'block';
+    btn.textContent = 'Speichern';
+    btn.disabled = false;
   }
 
-  if (!title) { showMsg('⚠ Bitte Titel eingeben.',true); return; }
+  if (!title) { done('⚠ Bitte Titel eingeben.', false); return; }
 
-  const {data:{session}} = await sb.auth.getSession();
-  if (!session) { showMsg('⚠ Nicht eingeloggt. Bitte neu einloggen.',true); return; }
-
+  // Session holen
+  let session = null;
   try {
-    if (isFeatured) await sb.from('articles').update({featured:false}).eq('featured',true);
-    const payload={title,category,featured:isFeatured,excerpt,content};
-    const res = id
-      ? await sb.from('articles').update(payload).eq('id',parseInt(id)).select()
-      : await sb.from('articles').insert(payload).select();
+    const r = await sb.auth.getSession();
+    session = r.data.session;
+  } catch(e) {
+    done('⚠ Session-Fehler: ' + e.message, false); return;
+  }
+
+  if (!session) {
+    done('⚠ Nicht eingeloggt — bitte neu einloggen.', false); return;
+  }
+
+  // Speichern
+  try {
+    if (isFeatured) {
+      await sb.from('articles').update({featured: false}).eq('featured', true);
+    }
+
+    const payload = {title, category, featured: isFeatured, excerpt, content};
+
+    let res;
+    if (id) {
+      res = await sb.from('articles').update(payload).eq('id', Number(id)).select();
+    } else {
+      res = await sb.from('articles').insert([payload]).select();
+    }
 
     dbgEl.textContent = res.error
-      ? 'DB-Fehler: '+res.error.message+' (Code: '+res.error.code+')'
-      : 'OK: '+(res.data?.[0]?.title||'gespeichert');
-    dbgEl.style.display='block';
+      ? 'Fehler: ' + res.error.message + ' | Code: ' + (res.error.code || '?')
+      : 'OK: ' + JSON.stringify(res.data?.[0]?.title);
+    dbgEl.style.display = 'block';
 
-    if (res.error) { showMsg('⚠ '+res.error.message,true); return; }
+    if (res.error) { done('⚠ ' + res.error.message, false); return; }
 
-    articlesCache=null; localStorage.removeItem(CACHE_KEY);
-    showMsg(id?'✓ Artikel aktualisiert':'✓ Artikel gespeichert',false);
-    resetArticleForm(); renderAdminArticles(); renderFeed(); renderBlog();
-    setTimeout(()=>{ okEl.style.display='none'; dbgEl.style.display='none'; },5000);
-  } catch(err) {
-    showMsg('⚠ '+(err.message||'Unbekannter Fehler'),true);
+    articlesCache = null;
+    localStorage.removeItem(CACHE_KEY);
+    done(id ? '✓ Artikel aktualisiert' : '✓ Artikel gespeichert', true);
+    resetArticleForm();
+    renderAdminArticles();
+    renderFeed();
+    setTimeout(() => { okEl.style.display = 'none'; dbgEl.style.display = 'none'; }, 6000);
+
+  } catch(e) {
+    done('⚠ ' + (e.message || 'Unbekannter Fehler'), false);
   }
 }
 
@@ -880,5 +916,27 @@ loadWatchlistQuotes();
 setInterval(()=>{ loadHeroTicker(); loadWatchlistQuotes(); },5*60*1000);
 setInterval(async()=>{ try { await sb.from('articles').select('id').limit(1); } catch(e){} },4*60*1000);
 </script>
-</body>
+
 </html>
+
+<div id="js-status" style="display:none;position:fixed;bottom:1rem;right:1rem;padding:.6rem 1rem;border-radius:6px;font-size:.75rem;font-family:monospace;z-index:9999;max-width:300px;word-break:break-all;"></div>
+
+<script>
+// Diagnose-Banner
+function showStatus(msg, ok) {
+  const el = document.getElementById('js-status');
+  el.style.display = 'block';
+  el.style.background = ok ? '#2C5F2E' : '#c0392b';
+  el.style.color = '#fff';
+  el.textContent = msg;
+  if (ok) setTimeout(() => el.style.display = 'none', 4000);
+}
+
+// Test ob Supabase geladen hat
+if (typeof supabase === 'undefined') {
+  showStatus('❌ Supabase nicht geladen — kein Internet?', false);
+} else {
+  showStatus('✓ JS läuft', true);
+}
+</script>
+</body>
