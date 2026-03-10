@@ -463,7 +463,20 @@ sb.auth.onAuthStateChange(async (event, session) => {
     try { const {data} = await sb.from('favorites').select('article_id').eq('user_id', currentUser.id); favorites = (data||[]).map(f=>f.article_id); } catch(e) {}
   } else { currentProfile = null; favorites = []; }
   updateUserTrigger();
+  renderFeed();
 });
+
+// Session beim Start sofort laden
+(async () => {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      currentUser = session.user;
+      isAdmin = currentUser?.email === ADMIN_EMAIL;
+      updateUserTrigger();
+    }
+  } catch(e) {}
+})();
 
 async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
@@ -479,16 +492,16 @@ async function doLogin() {
 }
 
 async function doLogout() {
-  try {
-    await sb.auth.signOut();
-  } catch(e) {}
-  currentUser=null; currentProfile=null; isAdmin=false; favorites=[];
-  // Menü sofort neu rendern
-  const panel = document.getElementById('user-menu-panel');
-  panel.classList.remove('open');
-  updateUserTrigger();
-  // Admin panel schließen falls offen
+  try { await sb.auth.signOut(); } catch(e) {}
+  currentUser = null; currentProfile = null; isAdmin = false; favorites = [];
+  // Menü schließen und neu rendern
+  document.getElementById('user-menu-panel').classList.remove('open');
   document.getElementById('admin-panel').classList.remove('open');
+  updateUserTrigger();
+  // Menü-Inhalt sofort auf "Einloggen" setzen
+  document.getElementById('user-menu-content').innerHTML = `
+    <button class="umenu-item" onclick="openAuthModal('login');closeUserMenu()">Einloggen</button>
+    <button class="umenu-item" onclick="openAuthModal('register');closeUserMenu()">Registrieren</button>`;
   renderFeed();
   showStatus('✓ Ausgeloggt', true);
 }
@@ -745,17 +758,20 @@ async function saveArticle() {
 
   if (!title) { done('⚠ Bitte Titel eingeben.', false); return; }
 
-  // Session holen
+  // Session frisch holen — zuverlässiger als gecachte Session
   let session = null;
   try {
+    // Erst refreshen, dann holen
+    await sb.auth.refreshSession();
     const r = await sb.auth.getSession();
     session = r.data.session;
-  } catch(e) {
-    done('⚠ Session-Fehler: ' + e.message, false); return;
-  }
+  } catch(e) {}
 
   if (!session) {
-    done('⚠ Nicht eingeloggt — bitte neu einloggen.', false); return;
+    // Letzter Versuch: currentUser aus State
+    if (!currentUser) {
+      done('⚠ Nicht eingeloggt — bitte neu einloggen.', false); return;
+    }
   }
 
   // Speichern
