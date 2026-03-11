@@ -335,7 +335,7 @@ footer{border-top:1px solid var(--rule);margin-top:2rem;}
       <div class="about-sig-name">Raphael Bücker</div>
       <div class="about-sig-title">Gründer · Leviathan</div>
       <div class="about-disclaimer">
-        <p><strong>Wichtiger Hinweis:</strong> Alle Inhalte auf Leviathan sind ausschließlich meine persönlichen Gedanken und Meinungen. Sie stellen keine Anlageberatung dar. Jeder ist für seine eigenen Finanzentscheidungen selbst verantwortlich. Bitte nutze Leviathan als das, was es ist — eine Informationsquelle und Denkanstoß, nicht mehr.</p>
+        <p><strong>Rechtlicher Hinweis:</strong> Alle Inhalte auf Leviathan sind ausschließlich meine persönlichen Gedanken und Meinungen gemäß § 34b WpHG. Sie stellen keine Anlageberatung, keine Anlageempfehlung und keine Aufforderung zum Kauf oder Verkauf von Finanzinstrumenten dar. Ich bin kein zugelassener Finanzberater. Aktienideen und Marktkommentare spiegeln ausschließlich meine eigene Einschätzung wider — ich kann in besprochenen Wertpapieren selbst investiert sein. Bitte treffe deine Anlageentscheidungen stets eigenverantwortlich und ziehe bei Bedarf einen professionellen Finanzberater hinzu.</p>
       </div>
     </div>
   </div>
@@ -436,7 +436,9 @@ footer{border-top:1px solid var(--rule);margin-top:2rem;}
     </div>
     <div class="ft-r">© 2025 Leviathan<br>Keine Anlageberatung. Kurse 15 Min. verzögert.</div>
   </div>
-  <div class="ft-disc"><strong>Haftungsausschluss:</strong> Alle Inhalte dienen ausschließlich Informationszwecken und stellen keine Anlageberatung dar.</div>
+  <div class="ft-disc">
+    <strong>Haftungsausschluss &amp; Risikohinweis:</strong> Alle Inhalte auf Leviathan — einschließlich Aktienideen, Marktkommentare und Quartalszahlen-Analysen — dienen ausschließlich der persönlichen Information und Meinungsäußerung des Autors. Sie stellen ausdrücklich <strong>keine Anlageberatung, keine Anlageempfehlung und keine Aufforderung zum Kauf oder Verkauf von Wertpapieren</strong> im Sinne des Wertpapierhandelsgesetzes (WpHG) dar. Der Autor ist kein zugelassener Anlageberater und besitzt keine BaFin-Lizenz. Investitionen in Wertpapiere sind mit erheblichen Risiken verbunden, einschließlich des vollständigen Kapitalverlusts. Vergangene Wertentwicklungen sind kein verlässlicher Indikator für zukünftige Ergebnisse. Jeder Leser ist für seine eigenen Anlageentscheidungen vollständig selbst verantwortlich. Der Autor kann selbst in besprochene Wertpapiere investiert sein (Interessenkonflikt). Kurse sind mindestens 15 Minuten verzögert und ohne Gewähr.
+  </div>
 </footer>
 
 <script>
@@ -670,6 +672,7 @@ async function openArticle(id) {
   if (!a) return;
   document.getElementById('art-title').textContent=a.title;
   document.getElementById('art-meta').innerHTML=`<span class="tag">${a.category}</span><span class="pdate">${formatDate(a.created_at)}</span>${favBtn(a.id)}`;
+  document.getElementById('art-disclaimer').style.display='block';
   document.getElementById('art-body').innerHTML=parseContent(a.content);
 }
 
@@ -868,10 +871,10 @@ function fmtP(p) {
 function fmtC(p) { if (p==null||isNaN(p)) return '—'; return (p>=0?'+':'')+p.toFixed(2)+'%'; }
 
 const FALLBACKS=[
-  {label:'S&P 500',val:'5.614', chg:'-1,76%',dir:'down',inv:false},
-  {label:'NASDAQ', val:'17.468',chg:'-2,61%',dir:'down',inv:false},
-  {label:'Gold',   val:'3.085', chg:'+0,80%',dir:'up',  inv:false},
-  {label:'VIX',    val:'23.37', chg:'+8,21%',dir:'up',  inv:true}
+  {label:'S&P 500',val:'6.800', chg:'+0,19%',dir:'up',  inv:false},
+  {label:'NASDAQ', val:'22.697',chg:'+0,01%',dir:'up',  inv:false},
+  {label:'Gold',   val:'5.202', chg:'+0,77%',dir:'up',  inv:false},
+  {label:'VIX',    val:'24,93', chg:'-2,24%',dir:'down',inv:true}
 ];
 function renderTicker(rows) {
   const el=document.getElementById('ticker-display'); if (!el) return;
@@ -888,7 +891,7 @@ function renderTicker(rows) {
 async function loadHeroTicker() {
   if (!document.getElementById('ticker-display')) return;
   renderTicker(FALLBACKS.map(f=>({label:f.label})));
-  const [sp500,nasdaq,gold,vix]=await Promise.all([fetchStooq('^spx'),fetchStooq('^ndq'),fetchGold(),fetchStooq('^vix')]);
+  const [sp500,nasdaq,gold,vix]=await Promise.all([fetchStooq('^spx'),fetchStooq('^ndx'),fetchGold(),fetchStooq('^vix')]);
   renderTicker([
     {label:'S&P 500',price:sp500?.price, changePct:sp500?.changePct},
     {label:'NASDAQ', price:nasdaq?.price,changePct:nasdaq?.changePct},
