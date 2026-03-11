@@ -32,9 +32,8 @@ nav a::after{content:'';position:absolute;bottom:-3px;left:0;width:0;height:1px;
 nav a:hover{color:var(--brg);}nav a:hover::after{width:100%;}
 .btn-nl{background:var(--brg);color:#fff!important;padding:.42rem 1rem;border-radius:2px;font-size:.72rem!important;transition:background .2s!important;}
 .btn-nl::after{display:none!important;}.btn-nl:hover{background:var(--brg-light)!important;}
-.user-trigger{background:none;border:1px solid rgba(44,95,46,0.3);border-radius:4px;cursor:pointer;color:var(--brg);font-size:.78rem;font-family:var(--sans);font-weight:500;letter-spacing:.04em;padding:.35rem .75rem;margin-left:.5rem;transition:all .2s;}
-.user-trigger:hover{background:var(--brg-muted);border-color:var(--brg);}
-.user-trigger.logged-in{background:var(--brg-muted);}
+.user-trigger{background:none;border:none;cursor:pointer;color:var(--ink-muted);font-size:.85rem;opacity:.35;transition:opacity .3s;padding:.3rem .4rem;margin-left:.5rem;letter-spacing:.08em;}
+.user-trigger:hover,.user-trigger.logged-in{opacity:.9;color:var(--brg);}
 
 /* ── PAGES ── */
 .page{display:none;}.page.active{display:block;}
@@ -256,7 +255,7 @@ footer{border-top:1px solid var(--rule);margin-top:2rem;}
       <a href="#" onclick="showPage('about');return false;">Über mich</a>
       <a href="https://raphaels-newsletter-0e69d6.beehiiv.com/" target="_blank" class="btn-nl">Newsletter</a>
     </nav>
-    <button class="user-trigger" id="user-trigger" onclick="toggleUserMenu()">Anmelden</button>
+    <button class="user-trigger" id="user-trigger" onclick="toggleUserMenu()">&#9679;&#9679;&#9679;</button>
   </div>
 </header>
 
@@ -445,7 +444,11 @@ const SUPABASE_URL = 'https://fncwjdfpnrhsuplbgomn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuY3dqZGZwbnJoc3VwbGJnb21uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MzczOTUsImV4cCI6MjA4ODQxMzM5NX0.A7wHYv-GsCV-ZUBHtgI9nWncbZm88d9TDLlNmoQxMzw';
 const ADMIN_EMAIL = 'raphael.buecker@gmail.com';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: { persistSession: true, autoRefreshToken: true }
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    storage: sessionStorage
+  }
 });
 
 let currentUser = null, currentProfile = null, isAdmin = false, favorites = [];
@@ -466,20 +469,7 @@ sb.auth.onAuthStateChange(async (event, session) => {
     try { const {data} = await sb.from('favorites').select('article_id').eq('user_id', currentUser.id); favorites = (data||[]).map(f=>f.article_id); } catch(e) {}
   } else { currentProfile = null; favorites = []; }
   updateUserTrigger();
-  renderFeed();
 });
-
-// Session beim Start sofort laden
-(async () => {
-  try {
-    const { data: { session } } = await sb.auth.getSession();
-    if (session) {
-      currentUser = session.user;
-      isAdmin = currentUser?.email === ADMIN_EMAIL;
-      updateUserTrigger();
-    }
-  } catch(e) {}
-})();
 
 async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
@@ -497,16 +487,12 @@ async function doLogin() {
 async function doLogout() {
   try { await sb.auth.signOut(); } catch(e) {}
   currentUser = null; currentProfile = null; isAdmin = false; favorites = [];
-  adminUnlocked = false;
-  // Menü schließen und neu rendern
   document.getElementById('user-menu-panel').classList.remove('open');
   document.getElementById('admin-panel').classList.remove('open');
   updateUserTrigger();
-  // Menü-Inhalt sofort auf "Einloggen" setzen
   document.getElementById('user-menu-content').innerHTML = `
     <button class="umenu-item" onclick="openAuthModal('login');closeUserMenu()">Einloggen</button>
     <button class="umenu-item" onclick="openAuthModal('register');closeUserMenu()">Registrieren</button>`;
-  renderFeed();
   showStatus('✓ Ausgeloggt', true);
 }
 
@@ -530,17 +516,7 @@ async function doRegister() {
 
 function updateUserTrigger() {
   const btn = document.getElementById('user-trigger');
-  if (!btn) return;
-  if (adminUnlocked) {
-    btn.textContent = 'Admin ⚙';
-    btn.classList.add('logged-in');
-  } else if (currentUser) {
-    btn.textContent = currentProfile?.username || 'Konto';
-    btn.classList.add('logged-in');
-  } else {
-    btn.textContent = 'Anmelden';
-    btn.classList.remove('logged-in');
-  }
+  if (btn) btn.classList.toggle('logged-in', !!currentUser);
 }
 function toggleUserMenu() {
   const p = document.getElementById('user-menu-panel');
@@ -550,24 +526,22 @@ function toggleUserMenu() {
 function closeUserMenu() { document.getElementById('user-menu-panel').classList.remove('open'); }
 function renderUserMenu() {
   const el = document.getElementById('user-menu-content');
-  if (adminUnlocked) {
+  if (!currentUser) {
     el.innerHTML = `
-      <div class="umenu-user"><div class="umenu-username">Admin ⚙</div></div>
+      <button class="umenu-item" onclick="openAuthModal('login');closeUserMenu()">Einloggen</button>
+      <button class="umenu-item" onclick="openAuthModal('register');closeUserMenu()">Registrieren</button>`;
+  } else if (currentUser.email === ADMIN_EMAIL) {
+    el.innerHTML = `
+      <div class="umenu-user"><div class="umenu-username">Admin ⚙</div><div class="umenu-email">${currentUser.email}</div></div>
       <button class="umenu-item" onclick="openAdmin();closeUserMenu()">Admin-Panel öffnen</button>
       <hr class="umenu-divider">
-      <button class="umenu-item" style="color:#c0392b;" onclick="lockAdmin();closeUserMenu()">Sperren</button>`;
-  } else if (currentUser) {
+      <button class="umenu-item" style="color:#c0392b;" onclick="doLogout()">Ausloggen</button>`;
+  } else {
     el.innerHTML = `
       <div class="umenu-user"><div class="umenu-username">${currentProfile?.username||'User'}</div><div class="umenu-email">${currentUser.email}</div></div>
       <button class="umenu-item" onclick="showPage('favorites');closeUserMenu()">★ Meine Favoriten</button>
       <hr class="umenu-divider">
       <button class="umenu-item" style="color:#c0392b;" onclick="doLogout()">Ausloggen</button>`;
-  } else {
-    el.innerHTML = `
-      <button class="umenu-item" onclick="openAdmin();closeUserMenu()">Admin</button>
-      <hr class="umenu-divider">
-      <button class="umenu-item" onclick="openAuthModal('login');closeUserMenu()">Einloggen</button>
-      <button class="umenu-item" onclick="openAuthModal('register');closeUserMenu()">Registrieren</button>`;
   }
 }
 
@@ -723,15 +697,7 @@ function showPage(name) {
 }
 
 function openAdmin() {
-  if (!adminUnlocked) {
-    const pw = prompt('Admin-Passwort:');
-    if (pw !== ADMIN_PASSWORD) {
-      alert('Falsches Passwort.');
-      return;
-    }
-    adminUnlocked = true;
-    isAdmin = true;
-  }
+  if (!isAdmin) return;
   document.getElementById('admin-panel').classList.add('open');
   renderAdminArticles(); renderAdminWatchlist();
 }
@@ -798,9 +764,9 @@ async function saveArticle() {
 
   if (!title) { done('⚠ Bitte Titel eingeben.', false); return; }
 
-  // Passwort-Check statt Session
-  if (!adminUnlocked) {
-    done('⚠ Admin nicht entsperrt — bitte Passwort eingeben.', false); return;
+  // Session prüfen
+  if (!currentUser || currentUser.email !== ADMIN_EMAIL) {
+    done('⚠ Nicht als Admin eingeloggt.', false); return;
   }
 
   // Speichern
