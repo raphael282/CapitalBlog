@@ -374,10 +374,16 @@ footer{border-top:1px solid var(--rule);margin-top:2rem;}
     <div class="sec-hdr" style="margin-bottom:.75rem;"><span class="sec-title">Aktien-Scorecard</span></div>
     <p style="font-size:.85rem;color:var(--ink-muted);font-family:var(--sans);margin-bottom:2.5rem;line-height:1.6;">Gib ein Ticker-Symbol ein um eine kombinierte Bewertung aus Fundamentaldaten und Momentum zu erhalten. Kein Kauf- oder Verkaufssignal — nur eine strukturierte Übersicht.</p>
 
-    <!-- Input -->
-    <div style="display:flex;gap:.75rem;margin-bottom:2.5rem;">
-      <input id="sc-ticker" type="text" placeholder="z.B. AAPL, NVDA, SAP.DE" style="flex:1;padding:.65rem 1rem;border:1px solid var(--rule);border-radius:4px;font-family:var(--mono);font-size:.9rem;background:var(--cream);color:var(--ink);outline:none;" onkeydown="if(event.key==='Enter')runScorecard()">
-      <button onclick="runScorecard()" style="padding:.65rem 1.5rem;background:var(--brg);color:#fff;border:none;border-radius:4px;font-family:var(--sans);font-size:.85rem;font-weight:500;cursor:pointer;white-space:nowrap;">Analysieren →</button>
+    <!-- Input with Autocomplete -->
+    <div style="position:relative;margin-bottom:2.5rem;">
+      <div style="display:flex;gap:.75rem;">
+        <input id="sc-ticker" type="text" placeholder="Aktie suchen, z.B. Apple, Nvidia, SAP…" autocomplete="off"
+          style="flex:1;padding:.65rem 1rem;border:1px solid var(--rule);border-radius:4px;font-family:var(--sans);font-size:.9rem;background:var(--cream);color:var(--ink);outline:none;"
+          oninput="scSearch(this.value)"
+          onkeydown="if(event.key==='Enter'){scHideDropdown();runScorecard();}if(event.key==='Escape')scHideDropdown();">
+        <button onclick="scHideDropdown();runScorecard()" style="padding:.65rem 1.5rem;background:var(--brg);color:#fff;border:none;border-radius:4px;font-family:var(--sans);font-size:.85rem;font-weight:500;cursor:pointer;white-space:nowrap;">Analysieren →</button>
+      </div>
+      <div id="sc-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--rule);border-radius:0 0 6px 6px;box-shadow:var(--shadow);z-index:100;max-height:280px;overflow-y:auto;"></div>
     </div>
 
     <div id="sc-api-setup" style="display:none;"><input id="sc-api-key" type="hidden"></div>
@@ -1039,13 +1045,14 @@ async function runScorecard() {
 
   try {
     const base = 'https://financialmodelingprep.com/api/v3';
+    const proxy = url => `https://corsproxy.io/?${encodeURIComponent(url)}`;
 
     // Parallel fetch: profile + ratios + quote + price-change
     const [profileRes, ratiosRes, quoteRes, changeRes] = await Promise.all([
-      fetch(`${base}/profile/${ticker}?apikey=${key}`).then(r=>r.json()),
-      fetch(`${base}/ratios-ttm/${ticker}?apikey=${key}`).then(r=>r.json()),
-      fetch(`${base}/quote/${ticker}?apikey=${key}`).then(r=>r.json()),
-      fetch(`${base}/stock-price-change/${ticker}?apikey=${key}`).then(r=>r.json())
+      fetch(proxy(`${base}/profile/${ticker}?apikey=${key}`)).then(r=>r.json()),
+      fetch(proxy(`${base}/ratios-ttm/${ticker}?apikey=${key}`)).then(r=>r.json()),
+      fetch(proxy(`${base}/quote/${ticker}?apikey=${key}`)).then(r=>r.json()),
+      fetch(proxy(`${base}/stock-price-change/${ticker}?apikey=${key}`)).then(r=>r.json())
     ]);
 
     const p = profileRes?.[0];
@@ -1198,6 +1205,48 @@ async function runScorecard() {
     document.getElementById('sc-error').style.display = 'block';
   }
 }
+
+// ── AUTOCOMPLETE ──
+let scSearchTimer = null;
+
+function scSearch(q) {
+  clearTimeout(scSearchTimer);
+  const dd = document.getElementById('sc-dropdown');
+  if (!q || q.length < 2) { dd.style.display='none'; return; }
+  scSearchTimer = setTimeout(async () => {
+    try {
+      const key = getFmpKey();
+      const url = `https://financialmodelingprep.com/api/v3/search?query=${encodeURIComponent(q)}&limit=8&apikey=${key}`;
+      const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
+      const data = await res.json();
+      if (!data?.length) { dd.style.display='none'; return; }
+      dd.innerHTML = data.map(s => `
+        <div onclick="scSelect('${s.symbol}','${s.name.replace(/'/g,"\'")}');return false;"
+          style="padding:.65rem 1rem;cursor:pointer;border-bottom:1px solid var(--rule);display:flex;gap:.75rem;align-items:center;"
+          onmouseover="this.style.background='var(--brg-muted)'"
+          onmouseout="this.style.background=''">
+          <span style="font-family:var(--mono);font-size:.8rem;font-weight:600;color:var(--brg);min-width:60px;">${s.symbol}</span>
+          <span style="font-family:var(--sans);font-size:.83rem;color:var(--ink);flex:1;">${s.name}</span>
+          <span style="font-family:var(--sans);font-size:.73rem;color:var(--ink-muted);">${s.exchangeShortName||s.stockExchange||''}</span>
+        </div>`).join('');
+      dd.style.display = 'block';
+    } catch(e) { dd.style.display='none'; }
+  }, 300);
+}
+
+function scSelect(ticker, name) {
+  document.getElementById('sc-ticker').value = ticker;
+  scHideDropdown();
+  runScorecard();
+}
+
+function scHideDropdown() {
+  document.getElementById('sc-dropdown').style.display = 'none';
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#sc-ticker') && !e.target.closest('#sc-dropdown')) scHideDropdown();
+});
 
 // Format helpers
 function pct(v) { return v != null ? (v*100).toFixed(1)+'%' : '—'; }
