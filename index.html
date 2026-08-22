@@ -54,6 +54,24 @@ nav a:hover{color:var(--brg);}nav a:hover::after{width:100%;}
 .up{color:var(--brg);}.down{color:#c0392b;}
 .up-bg{background:var(--brg-muted);color:var(--brg);}.down-bg{background:rgba(192,57,43,.08);color:#c0392b;}
 
+/* ── SCORECARD ── */
+.sc-gauge-box{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:1.25rem 1.5rem;}
+.sc-gauge-label{font-family:var(--sans);font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-muted);margin-bottom:.5rem;}
+.sc-gauge-val{font-family:var(--serif);font-size:2.2rem;font-weight:700;color:var(--ink);line-height:1;}
+.sc-gauge-bar-bg{background:var(--rule);border-radius:99px;height:5px;margin:.75rem 0 .5rem;overflow:hidden;}
+.sc-gauge-bar{height:100%;border-radius:99px;background:var(--brg);transition:width .6s ease;}
+.sc-gauge-sub{font-family:var(--sans);font-size:.73rem;color:var(--ink-muted);line-height:1.5;}
+.sc-metric-row{display:grid;grid-template-columns:1fr auto auto;gap:.5rem 1.5rem;padding:.65rem 1rem;border-bottom:1px solid var(--rule);font-family:var(--sans);font-size:.82rem;align-items:center;}
+.sc-metric-row:last-child{border-bottom:none;}
+.sc-metric-row:nth-child(even){background:rgba(44,95,46,0.025);}
+.sc-metric-name{color:var(--ink-soft);}
+.sc-metric-val{font-family:var(--mono);font-size:.8rem;color:var(--ink);text-align:right;}
+.sc-metric-score{font-family:var(--mono);font-size:.75rem;padding:.1rem .4rem;border-radius:3px;text-align:center;min-width:28px;}
+.sc-score-good{background:rgba(44,95,46,0.1);color:var(--brg);}
+.sc-score-mid{background:rgba(200,150,0,0.1);color:#b8860b;}
+.sc-score-bad{background:rgba(192,57,43,0.1);color:#c0392b;}
+.sc-score-na{background:var(--rule);color:var(--ink-muted);}
+
 /* ── MAIN GRID ── */
 .main-grid{max-width:1240px;margin:0 auto;padding:4rem 2rem;display:grid;grid-template-columns:1fr 310px;gap:5rem;}
 .sec-hdr{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:2.5rem;padding-bottom:.9rem;border-bottom:2px solid var(--brg);}
@@ -253,6 +271,7 @@ footer{border-top:1px solid var(--rule);margin-top:2rem;}
     <nav>
       <a href="#" onclick="showPage('blog');return false;">Artikel</a>
       <a href="#" onclick="showPage('about');return false;">Über mich</a>
+      <a href="#" onclick="showPage('scorecard');return false;">Scorecard</a>
       <a href="https://raphaels-newsletter-0e69d6.beehiiv.com/" target="_blank" class="btn-nl">Newsletter</a>
     </nav>
     <button class="user-trigger" id="user-trigger" onclick="toggleUserMenu()">&#9679;&#9679;&#9679;</button>
@@ -346,6 +365,64 @@ footer{border-top:1px solid var(--rule);margin-top:2rem;}
   <div style="max-width:1240px;margin:0 auto;padding:4rem 2rem;">
     <div class="sec-hdr" style="max-width:860px;margin-bottom:3rem;"><span class="sec-title">Meine Favoriten</span></div>
     <div id="favorites-feed"><div class="empty-state">Noch keine Favoriten gespeichert.</div></div>
+  </div>
+</div>
+
+<!-- SCORECARD -->
+<div id="page-scorecard" class="page">
+  <div style="max-width:860px;margin:0 auto;padding:4rem 2rem;">
+    <div class="sec-hdr" style="margin-bottom:.75rem;"><span class="sec-title">Aktien-Scorecard</span></div>
+    <p style="font-size:.85rem;color:var(--ink-muted);font-family:var(--sans);margin-bottom:2.5rem;line-height:1.6;">Gib ein Ticker-Symbol ein um eine kombinierte Bewertung aus Fundamentaldaten und Momentum zu erhalten. Kein Kauf- oder Verkaufssignal — nur eine strukturierte Übersicht.</p>
+
+    <!-- Input -->
+    <div style="display:flex;gap:.75rem;margin-bottom:2.5rem;">
+      <input id="sc-ticker" type="text" placeholder="z.B. AAPL, NVDA, SAP.DE" style="flex:1;padding:.65rem 1rem;border:1px solid var(--rule);border-radius:4px;font-family:var(--mono);font-size:.9rem;background:var(--cream);color:var(--ink);outline:none;" onkeydown="if(event.key==='Enter')runScorecard()">
+      <button onclick="runScorecard()" style="padding:.65rem 1.5rem;background:var(--brg);color:#fff;border:none;border-radius:4px;font-family:var(--sans);font-size:.85rem;font-weight:500;cursor:pointer;white-space:nowrap;">Analysieren →</button>
+    </div>
+
+    <div id="sc-api-setup" style="display:none;"><input id="sc-api-key" type="hidden"></div>
+
+    <!-- Result -->
+    <div id="sc-result" style="display:none;">
+      <!-- Header -->
+      <div id="sc-header" style="margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--rule);"></div>
+
+      <!-- Score Gauges -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:2rem;">
+        <div class="sc-gauge-box" id="sc-quality-box">
+          <div class="sc-gauge-label">Quality Score</div>
+          <div class="sc-gauge-val" id="sc-quality-val">—</div>
+          <div class="sc-gauge-bar-bg"><div class="sc-gauge-bar" id="sc-quality-bar"></div></div>
+          <div class="sc-gauge-sub" id="sc-quality-sub"></div>
+        </div>
+        <div class="sc-gauge-box" id="sc-momentum-box">
+          <div class="sc-gauge-label">Momentum Score</div>
+          <div class="sc-gauge-val" id="sc-momentum-val">—</div>
+          <div class="sc-gauge-bar-bg"><div class="sc-gauge-bar" id="sc-momentum-bar"></div></div>
+          <div class="sc-gauge-sub" id="sc-momentum-sub"></div>
+        </div>
+      </div>
+
+      <!-- Overall Score -->
+      <div id="sc-overall" style="text-align:center;padding:1.5rem;background:var(--brg-muted);border-radius:6px;margin-bottom:2rem;"></div>
+
+      <!-- Metrics Table -->
+      <div style="font-family:var(--sans);font-size:.82rem;color:var(--ink-muted);margin-bottom:.75rem;letter-spacing:.06em;text-transform:uppercase;">Kennzahlen</div>
+      <div id="sc-metrics" style="border:1px solid var(--rule);border-radius:6px;overflow:hidden;"></div>
+
+      <!-- Disclaimer -->
+      <div style="margin-top:1.5rem;padding:.75rem 1rem;background:rgba(44,95,46,0.04);border-left:3px solid var(--brg);font-size:.72rem;color:var(--ink-muted);font-family:var(--sans);line-height:1.6;">
+        Risikohinweis: Diese Scorecard dient ausschließlich der persönlichen Information. Sie stellt keine Anlageberatung dar. Der Score basiert auf öffentlich verfügbaren Daten und mechanischen Regeln — keine Garantie für zukünftige Wertentwicklung.
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="sc-loading" style="display:none;text-align:center;padding:3rem;color:var(--ink-muted);font-family:var(--sans);font-size:.9rem;">
+      <div style="font-size:1.5rem;margin-bottom:.75rem;">⟳</div>Daten werden geladen…
+    </div>
+
+    <!-- Error -->
+    <div id="sc-error" style="display:none;padding:1rem 1.25rem;background:rgba(192,57,43,.06);border-left:3px solid #c0392b;border-radius:0 4px 4px 0;font-family:var(--sans);font-size:.83rem;color:#c0392b;"></div>
   </div>
 </div>
 
@@ -696,6 +773,7 @@ function showPage(name) {
   const pg=document.getElementById('page-'+name); if (pg) pg.classList.add('active');
   if (name==='blog') renderBlog();
   if (name==='favorites') renderFavorites();
+  if (name==='scorecard') initScorecard();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -929,6 +1007,204 @@ loadHeroTicker();
 loadWatchlistQuotes();
 setInterval(()=>{ loadHeroTicker(); loadWatchlistQuotes(); },5*60*1000);
 setInterval(async()=>{ try { await sb.from('articles').select('id').limit(1); } catch(e){} },4*60*1000);
+
+// ── SCORECARD ──
+const FMP_KEY_STORAGE = 'lv_fmp_key';
+const FMP_KEY_DEFAULT = 'bApEOS7yJYJvpuA4Qg257I2Xxl244ljX';
+
+function initScorecard() {
+  // API key is hardcoded — nothing to init
+}
+
+function saveFmpKey() {
+  const key = document.getElementById('sc-api-key').value.trim();
+  if (!key) return;
+  localStorage.setItem(FMP_KEY_STORAGE, key);
+  document.getElementById('sc-api-setup').style.display = 'none';
+  showStatus('✓ API Key gespeichert', true);
+}
+
+function getFmpKey() {
+  return localStorage.getItem(FMP_KEY_STORAGE) || FMP_KEY_DEFAULT;
+}
+
+async function runScorecard() {
+  const ticker = document.getElementById('sc-ticker').value.trim().toUpperCase();
+  if (!ticker) return;
+  const key = getFmpKey();
+
+  document.getElementById('sc-result').style.display = 'none';
+  document.getElementById('sc-error').style.display = 'none';
+  document.getElementById('sc-loading').style.display = 'block';
+
+  try {
+    const base = 'https://financialmodelingprep.com/api/v3';
+
+    // Parallel fetch: profile + ratios + quote + price-change
+    const [profileRes, ratiosRes, quoteRes, changeRes] = await Promise.all([
+      fetch(`${base}/profile/${ticker}?apikey=${key}`).then(r=>r.json()),
+      fetch(`${base}/ratios-ttm/${ticker}?apikey=${key}`).then(r=>r.json()),
+      fetch(`${base}/quote/${ticker}?apikey=${key}`).then(r=>r.json()),
+      fetch(`${base}/stock-price-change/${ticker}?apikey=${key}`).then(r=>r.json())
+    ]);
+
+    const p = profileRes?.[0];
+    const r = ratiosRes?.[0];
+    const q = quoteRes?.[0];
+    const ch = changeRes?.[0];
+
+    if (!p || !q) throw new Error('Aktie nicht gefunden. Bitte Ticker prüfen (z.B. AAPL, SAP.DE)');
+
+    // ── QUALITY SCORE METRICS ──
+    const metrics = [
+      // Profitability
+      { name: 'Bruttomarge',       val: r?.grossProfitMarginTTM,  fmt: pct,   lo:0.2, hi:0.5,  higher:true,  cat:'Profitabilität' },
+      { name: 'Nettomarge',        val: r?.netProfitMarginTTM,    fmt: pct,   lo:0.05,hi:0.2,  higher:true,  cat:'Profitabilität' },
+      { name: 'ROE',               val: r?.returnOnEquityTTM,     fmt: pct,   lo:0.1, hi:0.25, higher:true,  cat:'Profitabilität' },
+      { name: 'ROCE',              val: r?.returnOnCapitalEmployedTTM, fmt:pct,lo:0.1, hi:0.2,  higher:true,  cat:'Profitabilität' },
+      // Valuation
+      { name: 'KGV (PE)',          val: r?.peRatioTTM,            fmt: x1,    lo:10,  hi:30,   higher:false, cat:'Bewertung' },
+      { name: 'KUV (PS)',          val: r?.priceToSalesRatioTTM,  fmt: x1,    lo:1,   hi:8,    higher:false, cat:'Bewertung' },
+      { name: 'EV/EBITDA',         val: r?.enterpriseValueMultipleTTM, fmt:x1, lo:8,  hi:20,   higher:false, cat:'Bewertung' },
+      // Financial Health
+      { name: 'Current Ratio',     val: r?.currentRatioTTM,       fmt: x1,    lo:1.5, hi:3,    higher:true,  cat:'Finanzstärke' },
+      { name: 'Debt/Equity',       val: r?.debtEquityRatioTTM,    fmt: x1,    lo:0.3, hi:1.5,  higher:false, cat:'Finanzstärke' },
+      { name: 'Interest Coverage', val: r?.interestCoverageTTM,   fmt: x1,    lo:3,   hi:10,   higher:true,  cat:'Finanzstärke' },
+    ];
+
+    // ── MOMENTUM METRICS ──
+    const momentumMetrics = [
+      { name: '1 Woche',   val: ch?.['1W'],  higher:true },
+      { name: '1 Monat',   val: ch?.['1M'],  higher:true },
+      { name: '3 Monate',  val: ch?.['3M'],  higher:true },
+      { name: '6 Monate',  val: ch?.['6M'],  higher:true },
+      { name: '1 Jahr',    val: ch?.['1Y'],  higher:true },
+    ];
+
+    // ── SCORE CALCULATIONS ──
+    function scoreMetric(val, lo, hi, higher) {
+      if (val == null || isNaN(val)) return null;
+      if (higher) {
+        if (val >= hi) return 2;
+        if (val >= lo) return 1;
+        return 0;
+      } else {
+        if (val <= lo) return 2;
+        if (val <= hi) return 1;
+        return 0;
+      }
+    }
+
+    let qualityPoints = 0, qualityMax = 0;
+    metrics.forEach(m => {
+      const s = scoreMetric(m.val, m.lo, m.hi, m.higher);
+      m.score = s;
+      if (s !== null) { qualityPoints += s; qualityMax += 2; }
+    });
+
+    let momPoints = 0, momCount = 0;
+    momentumMetrics.forEach(m => {
+      if (m.val != null && !isNaN(m.val)) {
+        if (m.val > 5) momPoints += 2;
+        else if (m.val > 0) momPoints += 1;
+        else momPoints += 0;
+        momCount++;
+      }
+    });
+
+    const qualityScore  = qualityMax  > 0 ? Math.round((qualityPoints / qualityMax)  * 100) : 0;
+    const momentumScore = momCount    > 0 ? Math.round((momPoints     / (momCount*2)) * 100) : 0;
+    const overallScore  = Math.round(qualityScore * 0.65 + momentumScore * 0.35);
+
+    // ── RENDER ──
+    document.getElementById('sc-loading').style.display = 'none';
+    document.getElementById('sc-result').style.display = 'block';
+
+    // Header
+    document.getElementById('sc-header').innerHTML = `
+      <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+        ${p.image ? `<img src="${p.image}" style="width:44px;height:44px;border-radius:6px;object-fit:contain;background:#fff;border:1px solid var(--rule);">` : ''}
+        <div>
+          <div style="font-family:var(--serif);font-size:1.4rem;font-weight:600;">${p.companyName}</div>
+          <div style="font-family:var(--mono);font-size:.78rem;color:var(--ink-muted);">${ticker} · ${p.exchangeShortName} · ${p.sector||'—'}</div>
+        </div>
+        <div style="margin-left:auto;text-align:right;">
+          <div style="font-family:var(--mono);font-size:1.3rem;font-weight:600;">${q.price?.toFixed(2)} ${p.currency}</div>
+          <div style="font-family:var(--mono);font-size:.8rem;color:${(q.changesPercentage||0)>=0?'var(--brg)':'#c0392b'};">${(q.changesPercentage||0)>=0?'+':''}${(q.changesPercentage||0).toFixed(2)}% heute</div>
+        </div>
+      </div>`;
+
+    // Quality Gauge
+    const qColor = qualityScore >= 65 ? 'var(--brg)' : qualityScore >= 40 ? '#b8860b' : '#c0392b';
+    document.getElementById('sc-quality-val').textContent = qualityScore + '/100';
+    document.getElementById('sc-quality-val').style.color = qColor;
+    document.getElementById('sc-quality-bar').style.width = qualityScore + '%';
+    document.getElementById('sc-quality-bar').style.background = qColor;
+    document.getElementById('sc-quality-sub').textContent =
+      qualityScore >= 65 ? 'Starke Fundamentaldaten' :
+      qualityScore >= 40 ? 'Gemischte Fundamentaldaten' : 'Schwache Fundamentaldaten';
+
+    // Momentum Gauge
+    const mColor = momentumScore >= 65 ? 'var(--brg)' : momentumScore >= 40 ? '#b8860b' : '#c0392b';
+    document.getElementById('sc-momentum-val').textContent = momentumScore + '/100';
+    document.getElementById('sc-momentum-val').style.color = mColor;
+    document.getElementById('sc-momentum-bar').style.width = momentumScore + '%';
+    document.getElementById('sc-momentum-bar').style.background = mColor;
+    document.getElementById('sc-momentum-sub').textContent =
+      momentumScore >= 65 ? 'Starkes Kursmomentum' :
+      momentumScore >= 40 ? 'Neutrales Momentum' : 'Schwaches Momentum';
+
+    // Overall
+    const oColor = overallScore >= 65 ? 'var(--brg)' : overallScore >= 40 ? '#b8860b' : '#c0392b';
+    const oLabel = overallScore >= 65 ? 'Stark' : overallScore >= 40 ? 'Neutral' : 'Schwach';
+    document.getElementById('sc-overall').innerHTML = `
+      <div style="font-family:var(--sans);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);margin-bottom:.4rem;">Gesamtscore</div>
+      <div style="font-family:var(--serif);font-size:3rem;font-weight:700;color:${oColor};line-height:1;">${overallScore}</div>
+      <div style="font-family:var(--sans);font-size:.85rem;color:${oColor};margin-top:.25rem;font-weight:500;">${oLabel}</div>
+      <div style="font-family:var(--sans);font-size:.73rem;color:var(--ink-muted);margin-top:.25rem;">65% Qualität · 35% Momentum</div>`;
+
+    // Metrics table
+    let lastCat = '';
+    let tableHtml = '';
+    [...metrics, ...momentumMetrics.map(m => ({...m, cat:'Momentum', fmt: pct, lo:0, hi:0.05}))].forEach(m => {
+      if (m.cat !== lastCat) {
+        tableHtml += `<div style="padding:.4rem 1rem;background:var(--brg-muted);font-family:var(--sans);font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--brg);font-weight:600;">${m.cat}</div>`;
+        lastCat = m.cat;
+      }
+      const val = m.cat === 'Momentum'
+        ? (m.val != null ? (m.val >= 0 ? '+' : '') + m.val.toFixed(2) + '%' : '—')
+        : (m.val != null && !isNaN(m.val) ? m.fmt(m.val) : '—');
+
+      let scoreClass = 'sc-score-na', scoreText = '—';
+      if (m.cat === 'Momentum' && m.val != null) {
+        if (m.val > 5)  { scoreClass = 'sc-score-good'; scoreText = '▲'; }
+        else if (m.val > 0) { scoreClass = 'sc-score-mid'; scoreText = '→'; }
+        else { scoreClass = 'sc-score-bad'; scoreText = '▼'; }
+      } else if (m.score === 2) { scoreClass = 'sc-score-good'; scoreText = '✓'; }
+      else if (m.score === 1) { scoreClass = 'sc-score-mid'; scoreText = '~'; }
+      else if (m.score === 0) { scoreClass = 'sc-score-bad'; scoreText = '✗'; }
+
+      tableHtml += `<div class="sc-metric-row">
+        <span class="sc-metric-name">${m.name}</span>
+        <span class="sc-metric-val">${val}</span>
+        <span class="sc-metric-score ${scoreClass}">${scoreText}</span>
+      </div>`;
+    });
+    document.getElementById('sc-metrics').innerHTML = tableHtml;
+
+  } catch(err) {
+    document.getElementById('sc-loading').style.display = 'none';
+    document.getElementById('sc-error').textContent = '⚠ ' + (err.message || 'Fehler beim Laden der Daten.');
+    document.getElementById('sc-error').style.display = 'block';
+  }
+}
+
+// Format helpers
+function pct(v) { return v != null ? (v*100).toFixed(1)+'%' : '—'; }
+function x1(v)  { return v != null ? v.toFixed(1)+'x' : '—'; }
+
+// Init scorecard when page loads
+document.addEventListener('DOMContentLoaded', initScorecard);
 </script>
 
 </html>
