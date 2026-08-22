@@ -1037,22 +1037,21 @@ function getFmpKey() {
 async function runScorecard() {
   const ticker = document.getElementById('sc-ticker').value.trim().toUpperCase();
   if (!ticker) return;
-  const key = getFmpKey();
+  // API key handled server-side
 
   document.getElementById('sc-result').style.display = 'none';
   document.getElementById('sc-error').style.display = 'none';
   document.getElementById('sc-loading').style.display = 'block';
 
   try {
-    const base = 'https://financialmodelingprep.com/api/v3';
-    const proxy = url => `https://corsproxy.io/?${encodeURIComponent(url)}`;
+    // Vercel proxy — kein CORS Problem
+    const fmp = (ep, params='') => fetch(`/api/fmp?endpoint=${ep}${params}`).then(r=>r.json());
 
-    // Parallel fetch: profile + ratios + quote + price-change
     const [profileRes, ratiosRes, quoteRes, changeRes] = await Promise.all([
-      fetch(proxy(`${base}/profile/${ticker}?apikey=${key}`)).then(r=>r.json()),
-      fetch(proxy(`${base}/ratios-ttm/${ticker}?apikey=${key}`)).then(r=>r.json()),
-      fetch(proxy(`${base}/quote/${ticker}?apikey=${key}`)).then(r=>r.json()),
-      fetch(proxy(`${base}/stock-price-change/${ticker}?apikey=${key}`)).then(r=>r.json())
+      fmp(`profile/${ticker}`),
+      fmp(`ratios-ttm/${ticker}`),
+      fmp(`quote/${ticker}`),
+      fmp(`stock-price-change/${ticker}`)
     ]);
 
     const p = profileRes?.[0];
@@ -1215,9 +1214,8 @@ function scSearch(q) {
   if (!q || q.length < 2) { dd.style.display='none'; return; }
   scSearchTimer = setTimeout(async () => {
     try {
-      const key = getFmpKey();
-      const url = `https://financialmodelingprep.com/api/v3/search?query=${encodeURIComponent(q)}&limit=8&apikey=${key}`;
-      const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
+      // API key handled server-side
+      const res = await fetch(`/api/fmp?endpoint=search&query=${encodeURIComponent(q)}&limit=8`);
       const data = await res.json();
       if (!data?.length) { dd.style.display='none'; return; }
       dd.innerHTML = data.map(s => `
